@@ -1,7 +1,7 @@
 """
 📚 Document Comparator - Aplicação Streamlit
 Compara dois arquivos (PDF ou Word) e gera relatório de diferenças
-Versão com relatório visual melhorado
+Versão com layout limpo e profissional
 """
 
 import streamlit as st
@@ -32,6 +32,182 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# CSS customizado para layout mais limpo
+st.markdown("""
+<style>
+    /* Estilo para comparação lado a lado */
+    .comparison-container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .document-column {
+        flex: 1;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .document-header {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0e0e0;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .document-content {
+        padding: 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .line-number {
+        display: inline-block;
+        width: 40px;
+        color: #666;
+        text-align: right;
+        margin-right: 12px;
+        user-select: none;
+    }
+    
+    .line-content {
+        display: inline;
+    }
+    
+    .diff-line {
+        margin: 2px 0;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .diff-added {
+        background-color: #d4edda;
+        border-left: 3px solid #28a745;
+    }
+    
+    .diff-removed {
+        background-color: #f8d7da;
+        border-left: 3px solid #dc3545;
+    }
+    
+    .diff-changed {
+        background-color: #fff3cd;
+        border-left: 3px solid #ffc107;
+    }
+    
+    .diff-normal {
+        background-color: transparent;
+    }
+    
+    .page-indicator {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .legend-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+    
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid #ccc;
+    }
+    
+    .legend-added { background-color: #d4edda; border-left: 3px solid #28a745; }
+    .legend-removed { background-color: #f8d7da; border-left: 3px solid #dc3545; }
+    .legend-changed { background-color: #fff3cd; border-left: 3px solid #ffc107; }
+    
+    /* Melhorar tabelas do difflib */
+    .diff table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        margin: 0;
+    }
+    
+    .diff th {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .diff td {
+        padding: 4px 8px;
+        border: 1px solid #dee2e6;
+        vertical-align: top;
+        word-wrap: break-word;
+    }
+    
+    .diff_add {
+        background-color: #d4edda !important;
+        border-left: 3px solid #28a745 !important;
+    }
+    
+    .diff_sub {
+        background-color: #f8d7da !important;
+        border-left: 3px solid #dc3545 !important;
+    }
+    
+    .diff_chg {
+        background-color: #fff3cd !important;
+        border-left: 3px solid #ffc107 !important;
+    }
+    
+    /* Estilo para métricas */
+    .metric-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .metric-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
@@ -285,213 +461,276 @@ class DocumentComparator:
         progress_bar.empty()
         return diferencas_simples, diferencas_detalhadas
     
-    def gerar_relatorio_html_melhorado(self, diferencas: List[Dict], diferencas_detalhadas: List[Dict], nome_ref: str, nome_novo: str) -> str:
-        """Gera relatório HTML formatado com visual melhorado"""
+    def gerar_relatorio_html_limpo(self, diferencas: List[Dict], diferencas_detalhadas: List[Dict], nome_ref: str, nome_novo: str) -> str:
+        """Gera relatório HTML com layout limpo e profissional"""
         html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Relatório de Comparação de Documentos</title>
+            <title>Relatório de Comparação - {nome_ref} vs {nome_novo}</title>
             <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                
                 body {{ 
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    margin: 0; 
-                    padding: 20px; 
-                    line-height: 1.6; 
-                    background-color: #f8f9fa;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    background: #f8f9fa;
                 }}
+                
                 .container {{
-                    max-width: 1200px;
+                    max-width: 1400px;
                     margin: 0 auto;
-                    background-color: white;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    overflow: hidden;
+                    background: white;
+                    min-height: 100vh;
                 }}
-                .header {{ 
+                
+                .header {{
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    padding: 30px; 
+                    padding: 2rem;
                     text-align: center;
                 }}
+                
                 .header h1 {{
-                    margin: 0;
-                    font-size: 2.5em;
+                    font-size: 2.5rem;
                     font-weight: 300;
+                    margin-bottom: 0.5rem;
                 }}
+                
                 .header p {{
-                    margin: 10px 0 0 0;
                     opacity: 0.9;
+                    font-size: 1.1rem;
                 }}
+                
                 .content {{
-                    padding: 30px;
+                    padding: 2rem;
                 }}
-                .summary {{ 
-                    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-                    padding: 25px; 
-                    border-radius: 10px; 
-                    margin-bottom: 30px;
-                    border-left: 5px solid #2196f3;
+                
+                .summary {{
+                    background: #f8f9fa;
+                    border: 1px solid #e9ecef;
+                    border-radius: 8px;
+                    padding: 1.5rem;
+                    margin-bottom: 2rem;
                 }}
-                .files-info {{ 
-                    background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e8 100%);
-                    padding: 25px; 
-                    border-radius: 10px; 
-                    margin-bottom: 30px;
-                    border-left: 5px solid #4caf50;
+                
+                .summary h2 {{
+                    color: #495057;
+                    margin-bottom: 1rem;
+                    font-size: 1.5rem;
                 }}
+                
                 .stats {{
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin: 20px 0;
+                    gap: 1rem;
+                    margin: 1rem 0;
                 }}
+                
                 .stat-card {{
                     background: white;
-                    padding: 20px;
-                    border-radius: 8px;
+                    border: 1px solid #e9ecef;
+                    border-radius: 6px;
+                    padding: 1.5rem;
                     text-align: center;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    border-top: 4px solid #667eea;
                 }}
+                
                 .stat-number {{
-                    font-size: 2em;
+                    font-size: 2.5rem;
                     font-weight: bold;
                     color: #667eea;
+                    display: block;
                 }}
+                
                 .stat-label {{
-                    color: #666;
-                    margin-top: 5px;
+                    color: #6c757d;
+                    font-size: 0.9rem;
+                    margin-top: 0.5rem;
                 }}
-                .page-section {{
-                    margin: 30px 0;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 10px;
-                    overflow: hidden;
+                
+                .files-info {{
+                    background: #e8f5e8;
+                    border: 1px solid #c3e6c3;
+                    border-radius: 8px;
+                    padding: 1.5rem;
+                    margin-bottom: 2rem;
                 }}
-                .page-header {{
-                    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-                    color: white;
-                    padding: 15px 25px;
-                    font-weight: bold;
-                    font-size: 1.2em;
+                
+                .files-info h2 {{
+                    color: #2e7d32;
+                    margin-bottom: 1rem;
                 }}
-                .diff-container {{
-                    padding: 0;
+                
+                .file-item {{
+                    margin: 0.5rem 0;
+                    font-size: 1rem;
                 }}
-                table.diff {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: 'Courier New', monospace;
-                    font-size: 13px;
-                }}
-                .diff th {{
-                    background: #f5f5f5;
-                    padding: 12px;
-                    text-align: left;
-                    border-bottom: 2px solid #ddd;
-                    font-weight: bold;
-                }}
-                .diff td {{
-                    padding: 8px 12px;
-                    border-bottom: 1px solid #eee;
-                    vertical-align: top;
-                    word-wrap: break-word;
-                    max-width: 400px;
-                }}
-                .diff_add {{
-                    background-color: #d4edda !important;
-                    border-left: 4px solid #28a745 !important;
-                }}
-                .diff_sub {{
-                    background-color: #f8d7da !important;
-                    border-left: 4px solid #dc3545 !important;
-                }}
-                .diff_chg {{
-                    background-color: #fff3cd !important;
-                    border-left: 4px solid #ffc107 !important;
-                }}
+                
                 .legend {{
                     display: flex;
                     justify-content: center;
-                    gap: 30px;
-                    margin: 20px 0;
-                    padding: 15px;
+                    gap: 2rem;
+                    margin: 2rem 0;
+                    padding: 1rem;
                     background: #f8f9fa;
+                    border: 1px solid #e9ecef;
                     border-radius: 8px;
                 }}
+                
                 .legend-item {{
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 0.5rem;
+                    font-weight: 500;
                 }}
+                
                 .legend-color {{
                     width: 20px;
                     height: 20px;
                     border-radius: 4px;
-                    border: 1px solid #ddd;
+                    border: 1px solid #ccc;
                 }}
-                .legend-add {{ background-color: #d4edda; border-left: 4px solid #28a745; }}
-                .legend-remove {{ background-color: #f8d7da; border-left: 4px solid #dc3545; }}
-                .legend-change {{ background-color: #fff3cd; border-left: 4px solid #ffc107; }}
-                .no-differences {{ 
-                    text-align: center; 
-                    padding: 60px; 
+                
+                .legend-added {{ background: #d4edda; border-left: 4px solid #28a745; }}
+                .legend-removed {{ background: #f8d7da; border-left: 4px solid #dc3545; }}
+                .legend-changed {{ background: #fff3cd; border-left: 4px solid #ffc107; }}
+                
+                .page-section {{
+                    margin: 2rem 0;
+                    border: 1px solid #e9ecef;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    background: white;
+                }}
+                
+                .page-header {{
+                    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                }}
+                
+                .diff-content {{
+                    padding: 0;
+                }}
+                
+                table.diff {{
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+                    font-size: 13px;
+                    line-height: 1.4;
+                }}
+                
+                .diff th {{
+                    background: #f8f9fa;
+                    padding: 0.75rem;
+                    text-align: left;
+                    border-bottom: 2px solid #dee2e6;
+                    font-weight: 600;
+                    color: #495057;
+                    font-size: 0.9rem;
+                }}
+                
+                .diff td {{
+                    padding: 0.5rem 0.75rem;
+                    border-bottom: 1px solid #f1f3f4;
+                    vertical-align: top;
+                    word-wrap: break-word;
+                    max-width: 0;
+                    overflow-wrap: break-word;
+                }}
+                
+                .diff_add {{
+                    background-color: #d4edda !important;
+                    border-left: 4px solid #28a745 !important;
+                }}
+                
+                .diff_sub {{
+                    background-color: #f8d7da !important;
+                    border-left: 4px solid #dc3545 !important;
+                }}
+                
+                .diff_chg {{
+                    background-color: #fff3cd !important;
+                    border-left: 4px solid #ffc107 !important;
+                }}
+                
+                .no-differences {{
+                    text-align: center;
+                    padding: 4rem 2rem;
                     background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-                    border-radius: 15px;
                     border: 2px dashed #4caf50;
+                    border-radius: 12px;
+                    margin: 2rem 0;
                 }}
+                
                 .no-differences h2 {{
                     color: #2e7d32;
-                    margin-bottom: 15px;
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
                 }}
+                
                 .no-differences p {{
                     color: #4caf50;
-                    font-size: 1.1em;
+                    font-size: 1.1rem;
                 }}
-                h2 {{
-                    color: #333;
-                    border-bottom: 2px solid #667eea;
-                    padding-bottom: 10px;
-                    margin-top: 40px;
-                }}
+                
                 .footer {{
-                    text-align: center;
-                    padding: 20px;
                     background: #f8f9fa;
-                    color: #666;
-                    font-size: 0.9em;
+                    border-top: 1px solid #e9ecef;
+                    padding: 2rem;
+                    text-align: center;
+                    color: #6c757d;
+                }}
+                
+                @media print {{
+                    .container {{ box-shadow: none; }}
+                    .header {{ background: #667eea !important; }}
                 }}
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>📚 Relatório de Comparação de Documentos</h1>
-                    <p>Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
+                    <h1>📄 Relatório de Comparação</h1>
+                    <p>Análise detalhada das diferenças entre documentos</p>
+                    <p style="font-size: 0.9rem; margin-top: 1rem;">
+                        Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
+                    </p>
                 </div>
                 
                 <div class="content">
                     <div class="files-info">
-                        <h2 style="margin-top: 0; border: none; color: #2e7d32;">📄 Arquivos Comparados</h2>
-                        <p><strong>📋 Arquivo de Referência:</strong> {nome_ref}</p>
-                        <p><strong>📋 Novo Arquivo:</strong> {nome_novo}</p>
+                        <h2>📋 Documentos Analisados</h2>
+                        <div class="file-item">
+                            <strong>Documento de Referência:</strong> {nome_ref}
+                        </div>
+                        <div class="file-item">
+                            <strong>Novo Documento:</strong> {nome_novo}
+                        </div>
                     </div>
                     
                     <div class="summary">
-                        <h2 style="margin-top: 0; border: none; color: #1976d2;">📊 Resumo da Análise</h2>
+                        <h2>📊 Resumo da Análise</h2>
                         <div class="stats">
                             <div class="stat-card">
-                                <div class="stat-number">{len(diferencas)}</div>
+                                <span class="stat-number">{len(diferencas)}</span>
                                 <div class="stat-label">Diferenças Encontradas</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-number">{len(set(d['pagina'] for d in diferencas)) if diferencas else 0}</div>
+                                <span class="stat-number">{len(set(d['pagina'] for d in diferencas)) if diferencas else 0}</span>
                                 <div class="stat-label">Páginas/Seções Afetadas</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-number">{len(set(d['tipo'] for d in diferencas)) if diferencas else 0}</div>
+                                <span class="stat-number">{len(set(d['tipo'] for d in diferencas)) if diferencas else 0}</span>
                                 <div class="stat-label">Tipos de Alterações</div>
                             </div>
                         </div>
@@ -502,53 +741,41 @@ class DocumentComparator:
             html += """
                     <div class="legend">
                         <div class="legend-item">
-                            <div class="legend-color legend-add"></div>
-                            <span><strong>Verde:</strong> Texto Adicionado</span>
+                            <div class="legend-color legend-added"></div>
+                            <span>Texto Adicionado</span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-color legend-remove"></div>
-                            <span><strong>Vermelho:</strong> Texto Removido</span>
+                            <div class="legend-color legend-removed"></div>
+                            <span>Texto Removido</span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-color legend-change"></div>
-                            <span><strong>Amarelo:</strong> Texto Modificado</span>
+                            <div class="legend-color legend-changed"></div>
+                            <span>Texto Modificado</span>
                         </div>
                     </div>
-                    
-                    <h2>🔍 Comparação Detalhada por Página</h2>
             """
             
             for diff_detail in diferencas_detalhadas:
-                # Melhorar o HTML do diff
-                html_diff_melhorado = diff_detail['html_diff']
-                
-                # Aplicar estilos personalizados ao diff
-                html_diff_melhorado = html_diff_melhorado.replace(
-                    'class="diff"', 
-                    'class="diff" style="width: 100%; font-family: Courier New, monospace;"'
-                )
-                
                 html += f"""
                     <div class="page-section">
                         <div class="page-header">
                             🔸 Página/Seção {diff_detail['pagina']} 
-                            <span style="font-weight: normal; opacity: 0.8;">
+                            <span style="font-weight: normal; opacity: 0.9;">
                                 ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)
                             </span>
                         </div>
-                        <div class="diff-container">
-                            {html_diff_melhorado}
+                        <div class="diff-content">
+                            {diff_detail['html_diff']}
                         </div>
                     </div>
                 """
         else:
             html += """
                     <div class="no-differences">
-                        <h2>✅ Nenhuma Diferença Encontrada</h2>
-                        <p>Os documentos são idênticos em conteúdo textual.</p>
-                        <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
-                            💡 Lembre-se: Esta comparação analisa apenas o texto. 
-                            Formatação, imagens e elementos visuais não são considerados.
+                        <h2>✅ Documentos Idênticos</h2>
+                        <p>Nenhuma diferença foi encontrada entre os documentos analisados.</p>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+                            💡 Esta análise considera apenas o conteúdo textual dos documentos.
                         </p>
                     </div>
             """
@@ -557,8 +784,10 @@ class DocumentComparator:
                 </div>
                 
                 <div class="footer">
-                    <p>📚 Document Comparator - Relatório gerado automaticamente</p>
-                    <p>💡 Para melhor visualização, abra este arquivo em um navegador web</p>
+                    <p><strong>Document Comparator</strong> - Ferramenta de análise e comparação de documentos</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        Para melhor experiência, visualize este relatório em um navegador web moderno
+                    </p>
                 </div>
             </div>
         </body>
@@ -573,41 +802,43 @@ def criar_link_download(conteudo: str, nome_arquivo: str, tipo_mime: str = "text
     href = f'<a href="data:{tipo_mime};base64,{b64}" download="{nome_arquivo}">📥 Baixar {nome_arquivo}</a>'
     return href
 
-def exibir_diferencas_visual(diferencas_detalhadas: List[Dict]):
-    """Exibe as diferenças de forma visual no Streamlit"""
+def exibir_diferencas_limpo(diferencas_detalhadas: List[Dict]):
+    """Exibe as diferenças de forma limpa e organizada"""
     if not diferencas_detalhadas:
         st.success("✅ Nenhuma diferença encontrada!")
         return
     
-    st.subheader("🔍 Comparação Visual por Página")
-    
     # Legenda
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("🟢 **Verde:** Texto Adicionado")
-    with col2:
-        st.markdown("🔴 **Vermelho:** Texto Removido")
-    with col3:
-        st.markdown("🟡 **Amarelo:** Texto Modificado")
-    
-    st.divider()
+    st.markdown("""
+    <div class="legend-container">
+        <div class="legend-item">
+            <div class="legend-color legend-added"></div>
+            <span><strong>Verde:</strong> Texto Adicionado</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-removed"></div>
+            <span><strong>Vermelho:</strong> Texto Removido</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-changed"></div>
+            <span><strong>Amarelo:</strong> Texto Modificado</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Exibir cada página com diferenças
     for diff_detail in diferencas_detalhadas:
-        with st.expander(f"🔸 Página/Seção {diff_detail['pagina']} ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)", expanded=True):
-            # Aplicar CSS customizado para melhor visualização
-            st.markdown("""
-            <style>
-            .diff table { width: 100%; font-family: 'Courier New', monospace; font-size: 12px; }
-            .diff th { background: #f5f5f5; padding: 8px; }
-            .diff td { padding: 6px 8px; vertical-align: top; }
-            .diff_add { background-color: #d4edda !important; }
-            .diff_sub { background-color: #f8d7da !important; }
-            .diff_chg { background-color: #fff3cd !important; }
-            </style>
-            """, unsafe_allow_html=True)
-            
-            st.markdown(diff_detail['html_diff'], unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="page-indicator">
+            🔸 Página/Seção {diff_detail['pagina']} 
+            ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Exibir diff com estilo melhorado
+        st.markdown(diff_detail['html_diff'], unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
 
 def main():
     """Função principal da aplicação"""
@@ -642,7 +873,7 @@ def main():
         **Dicas:**
         - Funciona melhor com documentos de texto
         - Imagens e formatação não são comparadas
-        - Relatório visual mostra diferenças lado a lado
+        - Layout limpo para apresentação profissional
         """)
     
     # Inicializar o comparador
@@ -725,94 +956,82 @@ def main():
                 st.session_state.tipo_novo = tipo_novo
     
     # Exibir resultados se existirem
-    if 'diferencas' in st.session_state:
+    if 'diferencas' in st.session_state and 'diferencas_detalhadas' in st.session_state:
         diferencas = st.session_state.diferencas
         diferencas_detalhadas = st.session_state.diferencas_detalhadas
         
         st.divider()
         
-        # Resumo dos resultados
+        # Resumo dos resultados com layout melhorado
+        st.subheader("📊 Resumo da Análise")
+        
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("📊 Total de Diferenças", len(diferencas))
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{len(diferencas)}</div>
+                <div class="metric-label">Diferenças Encontradas</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
             paginas_afetadas = len(set(d['pagina'] for d in diferencas)) if diferencas else 0
-            st.metric("📄 Páginas/Seções Afetadas", paginas_afetadas)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{paginas_afetadas}</div>
+                <div class="metric-label">Páginas/Seções Afetadas</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
             tipos_mudanca = len(set(d['tipo'] for d in diferencas)) if diferencas else 0
-            st.metric("🔄 Tipos de Mudança", tipos_mudanca)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{tipos_mudanca}</div>
+                <div class="metric-label">Tipos de Mudança</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col4:
             compatibilidade = "✅ Mesmos tipos" if st.session_state.tipo_ref == st.session_state.tipo_novo else "⚠️ Tipos diferentes"
-            st.metric("🔗 Compatibilidade", compatibilidade)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value" style="font-size: 1.2em;">{compatibilidade}</div>
+                <div class="metric-label">Compatibilidade</div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Exibir comparação visual
-        exibir_diferencas_visual(diferencas_detalhadas)
+        st.markdown("<br>", unsafe_allow_html=True)
         
+        # Exibir comparação visual limpa
+        if diferencas_detalhadas:
+            st.subheader("🔍 Comparação Detalhada")
+            exibir_diferencas_limpo(diferencas_detalhadas)
+        
+        # Tabela resumo (opcional, em expander)
         if diferencas:
-            st.subheader("📋 Tabela Resumo das Diferenças")
-            
-            # Converter para DataFrame para melhor visualização
-            df_diferencas = pd.DataFrame(diferencas)
-            
-            # Configurar exibição da tabela
-            st.dataframe(
-                df_diferencas,
-                use_container_width=True,
-                column_config={
-                    "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
-                    "linha": st.column_config.NumberColumn("Linha", format="%d"),
-                    "tipo": st.column_config.TextColumn("Tipo"),
-                    "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
-                    "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
-                }
-            )
-            
-            # Filtros para a tabela
-            with st.expander("🔍 Filtros Avançados"):
-                col1, col2 = st.columns(2)
+            with st.expander("📋 Ver Tabela Resumo das Diferenças", expanded=False):
+                # Converter para DataFrame para melhor visualização
+                df_diferencas = pd.DataFrame(diferencas)
                 
-                with col1:
-                    tipos_selecionados = st.multiselect(
-                        "Filtrar por tipo de mudança:",
-                        options=df_diferencas['tipo'].unique(),
-                        default=df_diferencas['tipo'].unique()
-                    )
-                
-                with col2:
-                    paginas_selecionadas = st.multiselect(
-                        "Filtrar por página/seção:",
-                        options=sorted(df_diferencas['pagina'].unique()),
-                        default=sorted(df_diferencas['pagina'].unique())
-                    )
-                
-                # Aplicar filtros
-                df_filtrado = df_diferencas[
-                    (df_diferencas['tipo'].isin(tipos_selecionados)) &
-                    (df_diferencas['pagina'].isin(paginas_selecionadas))
-                ]
-                
-                if len(df_filtrado) != len(df_diferencas):
-                    st.subheader("📋 Resultados Filtrados")
-                    st.dataframe(
-                        df_filtrado,
-                        use_container_width=True,
-                        column_config={
-                            "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
-                            "linha": st.column_config.NumberColumn("Linha", format="%d"),
-                            "tipo": st.column_config.TextColumn("Tipo"),
-                            "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
-                            "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
-                        }
-                    )
+                # Configurar exibição da tabela
+                st.dataframe(
+                    df_diferencas,
+                    use_container_width=True,
+                    column_config={
+                        "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
+                        "linha": st.column_config.NumberColumn("Linha", format="%d"),
+                        "tipo": st.column_config.TextColumn("Tipo"),
+                        "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
+                        "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
+                    }
+                )
         
         # Gerar e oferecer download do relatório
         st.subheader("📥 Download do Relatório")
         
-        relatorio_html = st.session_state.comparador.gerar_relatorio_html_melhorado(
+        relatorio_html = st.session_state.comparador.gerar_relatorio_html_limpo(
             diferencas, 
             diferencas_detalhadas,
             st.session_state.arquivo_ref_nome, 
@@ -821,7 +1040,7 @@ def main():
         
         # Criar nome do arquivo com timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        nome_relatorio = f"relatorio_comparacao_visual_{timestamp}.html"
+        nome_relatorio = f"relatorio_comparacao_profissional_{timestamp}.html"
         
         # Botão de download
         st.markdown(
@@ -829,7 +1048,7 @@ def main():
             unsafe_allow_html=True
         )
         
-        st.info("💡 O relatório visual contém comparação lado a lado com cores para destacar as diferenças, similar ao exemplo que você mostrou!")
+        st.info("💡 O relatório possui layout profissional e limpo, ideal para apresentação a gestores e stakeholders!")
         
         if not diferencas:
             st.balloons()
