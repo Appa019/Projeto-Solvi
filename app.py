@@ -361,9 +361,9 @@ class DocumentComparator:
         # Normalizar pontuação (remover espaços antes de pontos, vírgulas, etc.)
         texto = re.sub(r'\s+([,.;:!?])', r'\1', texto)
         
-        # Normalizar aspas e caracteres especiais
+        # Normalizar aspas e caracteres especiais - CORRIGIDO
         texto = re.sub(r'["""]', '"', texto)
-        texto = re.sub(r'[''']', "'", texto)
+        texto = re.sub(r"[''']", "'", texto)
         texto = re.sub(r'[–—]', '-', texto)
         
         return texto
