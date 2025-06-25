@@ -33,6 +33,97 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# CSS customizado para destacar filtros
+st.markdown("""
+<style>
+    /* Estilo para filtros em destaque */
+    .filtros-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filtros-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .filtros-content {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Estilo para métricas */
+    .metric-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .metric-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    /* Melhorar tabelas do difflib */
+    .diff table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        margin: 0;
+    }
+    
+    .diff th {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .diff td {
+        padding: 4px 8px;
+        border: 1px solid #dee2e6;
+        vertical-align: top;
+        word-wrap: break-word;
+    }
+    
+    .diff_add {
+        background-color: #d4edda !important;
+        border-left: 3px solid #28a745 !important;
+    }
+    
+    .diff_sub {
+        background-color: #f8d7da !important;
+        border-left: 3px solid #dc3545 !important;
+    }
+    
+    .diff_chg {
+        background-color: #fff3cd !important;
+        border-left: 3px solid #ffc107 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -284,294 +375,6 @@ class DocumentComparator:
         
         progress_bar.empty()
         return diferencas_simples, diferencas_detalhadas
-    
-    def gerar_relatorio_html_melhorado(self, diferencas: List[Dict], diferencas_detalhadas: List[Dict], nome_ref: str, nome_novo: str) -> str:
-        """Gera relatório HTML formatado com visual melhorado"""
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Relatório de Comparação de Documentos</title>
-            <style>
-                body {{ 
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    margin: 0; 
-                    padding: 20px; 
-                    line-height: 1.6; 
-                    background-color: #f8f9fa;
-                }}
-                .container {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    background-color: white;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    overflow: hidden;
-                }}
-                .header {{ 
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 30px; 
-                    text-align: center;
-                }}
-                .header h1 {{
-                    margin: 0;
-                    font-size: 2.5em;
-                    font-weight: 300;
-                }}
-                .header p {{
-                    margin: 10px 0 0 0;
-                    opacity: 0.9;
-                }}
-                .content {{
-                    padding: 30px;
-                }}
-                .summary {{ 
-                    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-                    padding: 25px; 
-                    border-radius: 10px; 
-                    margin-bottom: 30px;
-                    border-left: 5px solid #2196f3;
-                }}
-                .files-info {{ 
-                    background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e8 100%);
-                    padding: 25px; 
-                    border-radius: 10px; 
-                    margin-bottom: 30px;
-                    border-left: 5px solid #4caf50;
-                }}
-                .stats {{
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin: 20px 0;
-                }}
-                .stat-card {{
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    text-align: center;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    border-top: 4px solid #667eea;
-                }}
-                .stat-number {{
-                    font-size: 2em;
-                    font-weight: bold;
-                    color: #667eea;
-                }}
-                .stat-label {{
-                    color: #666;
-                    margin-top: 5px;
-                }}
-                .page-section {{
-                    margin: 30px 0;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 10px;
-                    overflow: hidden;
-                }}
-                .page-header {{
-                    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-                    color: white;
-                    padding: 15px 25px;
-                    font-weight: bold;
-                    font-size: 1.2em;
-                }}
-                .diff-container {{
-                    padding: 0;
-                }}
-                table.diff {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: 'Courier New', monospace;
-                    font-size: 13px;
-                }}
-                .diff th {{
-                    background: #f5f5f5;
-                    padding: 12px;
-                    text-align: left;
-                    border-bottom: 2px solid #ddd;
-                    font-weight: bold;
-                }}
-                .diff td {{
-                    padding: 8px 12px;
-                    border-bottom: 1px solid #eee;
-                    vertical-align: top;
-                    word-wrap: break-word;
-                    max-width: 400px;
-                }}
-                .diff_add {{
-                    background-color: #d4edda !important;
-                    border-left: 4px solid #28a745 !important;
-                }}
-                .diff_sub {{
-                    background-color: #f8d7da !important;
-                    border-left: 4px solid #dc3545 !important;
-                }}
-                .diff_chg {{
-                    background-color: #fff3cd !important;
-                    border-left: 4px solid #ffc107 !important;
-                }}
-                .legend {{
-                    display: flex;
-                    justify-content: center;
-                    gap: 30px;
-                    margin: 20px 0;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }}
-                .legend-item {{
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }}
-                .legend-color {{
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 4px;
-                    border: 1px solid #ddd;
-                }}
-                .legend-add {{ background-color: #d4edda; border-left: 4px solid #28a745; }}
-                .legend-remove {{ background-color: #f8d7da; border-left: 4px solid #dc3545; }}
-                .legend-change {{ background-color: #fff3cd; border-left: 4px solid #ffc107; }}
-                .no-differences {{ 
-                    text-align: center; 
-                    padding: 60px; 
-                    background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-                    border-radius: 15px;
-                    border: 2px dashed #4caf50;
-                }}
-                .no-differences h2 {{
-                    color: #2e7d32;
-                    margin-bottom: 15px;
-                }}
-                .no-differences p {{
-                    color: #4caf50;
-                    font-size: 1.1em;
-                }}
-                h2 {{
-                    color: #333;
-                    border-bottom: 2px solid #667eea;
-                    padding-bottom: 10px;
-                    margin-top: 40px;
-                }}
-                .footer {{
-                    text-align: center;
-                    padding: 20px;
-                    background: #f8f9fa;
-                    color: #666;
-                    font-size: 0.9em;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📚 Relatório de Comparação de Documentos</h1>
-                    <p>Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
-                </div>
-                
-                <div class="content">
-                    <div class="files-info">
-                        <h2 style="margin-top: 0; border: none; color: #2e7d32;">📄 Arquivos Comparados</h2>
-                        <p><strong>📋 Arquivo de Referência:</strong> {nome_ref}</p>
-                        <p><strong>📋 Novo Arquivo:</strong> {nome_novo}</p>
-                    </div>
-                    
-                    <div class="summary">
-                        <h2 style="margin-top: 0; border: none; color: #1976d2;">📊 Resumo da Análise</h2>
-                        <div class="stats">
-                            <div class="stat-card">
-                                <div class="stat-number">{len(diferencas)}</div>
-                                <div class="stat-label">Diferenças Encontradas</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{len(set(d['pagina'] for d in diferencas)) if diferencas else 0}</div>
-                                <div class="stat-label">Páginas/Seções Afetadas</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-number">{len(set(d['tipo'] for d in diferencas)) if diferencas else 0}</div>
-                                <div class="stat-label">Tipos de Alterações</div>
-                            </div>
-                        </div>
-                    </div>
-        """
-        
-        if diferencas_detalhadas:
-            html += """
-                    <div class="legend">
-                        <div class="legend-item">
-                            <div class="legend-color legend-add"></div>
-                            <span><strong>Verde:</strong> Texto Adicionado</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-remove"></div>
-                            <span><strong>Vermelho:</strong> Texto Removido</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-change"></div>
-                            <span><strong>Amarelo:</strong> Texto Modificado</span>
-                        </div>
-                    </div>
-                    
-                    <h2>🔍 Comparação Detalhada por Página</h2>
-            """
-            
-            for diff_detail in diferencas_detalhadas:
-                # Melhorar o HTML do diff
-                html_diff_melhorado = diff_detail['html_diff']
-                
-                # Aplicar estilos personalizados ao diff
-                html_diff_melhorado = html_diff_melhorado.replace(
-                    'class="diff"', 
-                    'class="diff" style="width: 100%; font-family: Courier New, monospace;"'
-                )
-                
-                html += f"""
-                    <div class="page-section">
-                        <div class="page-header">
-                            🔸 Página/Seção {diff_detail['pagina']} 
-                            <span style="font-weight: normal; opacity: 0.8;">
-                                ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)
-                            </span>
-                        </div>
-                        <div class="diff-container">
-                            {html_diff_melhorado}
-                        </div>
-                    </div>
-                """
-        else:
-            html += """
-                    <div class="no-differences">
-                        <h2>✅ Nenhuma Diferença Encontrada</h2>
-                        <p>Os documentos são idênticos em conteúdo textual.</p>
-                        <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
-                            💡 Lembre-se: Esta comparação analisa apenas o texto. 
-                            Formatação, imagens e elementos visuais não são considerados.
-                        </p>
-                    </div>
-            """
-        
-        html += """
-                </div>
-                
-                <div class="footer">
-                    <p>📚 Document Comparator - Relatório gerado automaticamente</p>
-                    <p>💡 Para melhor visualização, abra este arquivo em um navegador web</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
-        return html
-
-def criar_link_download(conteudo: str, nome_arquivo: str, tipo_mime: str = "text/html"):
-    """Cria link de download para o conteúdo"""
-    b64 = base64.b64encode(conteudo.encode()).decode()
-    href = f'<a href="data:{tipo_mime};base64,{b64}" download="{nome_arquivo}">📥 Baixar {nome_arquivo}</a>'
-    return href
 
 def exibir_diferencas_visual(diferencas_detalhadas: List[Dict]):
     """Exibe as diferenças de forma visual no Streamlit"""
@@ -629,7 +432,7 @@ def main():
         2. Faça upload do novo documento
         3. Clique em 'Comparar Documentos'
         4. Visualize as diferenças
-        5. Baixe o relatório
+        5. Use os filtros para análise específica
         
         **Formatos suportados:**
         - PDF (.pdf)
@@ -642,7 +445,7 @@ def main():
         **Dicas:**
         - Funciona melhor com documentos de texto
         - Imagens e formatação não são comparadas
-        - Relatório visual mostra diferenças lado a lado
+        - Use os filtros para focar em tipos específicos de alteração
         """)
     
     # Inicializar o comparador
@@ -725,111 +528,128 @@ def main():
                 st.session_state.tipo_novo = tipo_novo
     
     # Exibir resultados se existirem
-    if 'diferencas' in st.session_state:
+    if 'diferencas' in st.session_state and 'diferencas_detalhadas' in st.session_state:
         diferencas = st.session_state.diferencas
         diferencas_detalhadas = st.session_state.diferencas_detalhadas
         
         st.divider()
         
-        # Resumo dos resultados
+        # Resumo dos resultados com layout melhorado
+        st.subheader("📊 Resumo da Análise")
+        
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("📊 Total de Diferenças", len(diferencas))
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{len(diferencas)}</div>
+                <div class="metric-label">Diferenças Encontradas</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
             paginas_afetadas = len(set(d['pagina'] for d in diferencas)) if diferencas else 0
-            st.metric("📄 Páginas/Seções Afetadas", paginas_afetadas)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{paginas_afetadas}</div>
+                <div class="metric-label">Páginas/Seções Afetadas</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
             tipos_mudanca = len(set(d['tipo'] for d in diferencas)) if diferencas else 0
-            st.metric("🔄 Tipos de Mudança", tipos_mudanca)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value">{tipos_mudanca}</div>
+                <div class="metric-label">Tipos de Mudança</div>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col4:
             compatibilidade = "✅ Mesmos tipos" if st.session_state.tipo_ref == st.session_state.tipo_novo else "⚠️ Tipos diferentes"
-            st.metric("🔗 Compatibilidade", compatibilidade)
+            st.markdown(f"""
+            <div class="metric-container">
+                <div class="metric-value" style="font-size: 1.2em;">{compatibilidade}</div>
+                <div class="metric-label">Compatibilidade</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
         
         # Exibir comparação visual
         exibir_diferencas_visual(diferencas_detalhadas)
         
         if diferencas:
-            st.subheader("📋 Tabela Resumo das Diferenças")
+            # Filtros Avançados em destaque
+            st.markdown("""
+            <div class="filtros-container">
+                <div class="filtros-title">🔍 Filtros Avançados</div>
+                <div class="filtros-content">
+                    <p style="margin-bottom: 15px; text-align: center;">Use os filtros abaixo para analisar tipos específicos de alterações</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Converter para DataFrame para melhor visualização
             df_diferencas = pd.DataFrame(diferencas)
             
-            # Configurar exibição da tabela
-            st.dataframe(
-                df_diferencas,
-                use_container_width=True,
-                column_config={
-                    "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
-                    "linha": st.column_config.NumberColumn("Linha", format="%d"),
-                    "tipo": st.column_config.TextColumn("Tipo"),
-                    "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
-                    "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
-                }
-            )
+            col1, col2 = st.columns(2)
             
-            # Filtros para a tabela
-            with st.expander("🔍 Filtros Avançados"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    tipos_selecionados = st.multiselect(
-                        "Filtrar por tipo de mudança:",
-                        options=df_diferencas['tipo'].unique(),
-                        default=df_diferencas['tipo'].unique()
-                    )
-                
-                with col2:
-                    paginas_selecionadas = st.multiselect(
-                        "Filtrar por página/seção:",
-                        options=sorted(df_diferencas['pagina'].unique()),
-                        default=sorted(df_diferencas['pagina'].unique())
-                    )
-                
-                # Aplicar filtros
-                df_filtrado = df_diferencas[
-                    (df_diferencas['tipo'].isin(tipos_selecionados)) &
-                    (df_diferencas['pagina'].isin(paginas_selecionadas))
-                ]
-                
+            with col1:
+                tipos_selecionados = st.multiselect(
+                    "🏷️ Filtrar por tipo de mudança:",
+                    options=df_diferencas['tipo'].unique(),
+                    default=df_diferencas['tipo'].unique(),
+                    help="Selecione os tipos de alteração que deseja visualizar"
+                )
+            
+            with col2:
+                paginas_selecionadas = st.multiselect(
+                    "📄 Filtrar por página/seção:",
+                    options=sorted(df_diferencas['pagina'].unique()),
+                    default=sorted(df_diferencas['pagina'].unique()),
+                    help="Selecione as páginas/seções que deseja analisar"
+                )
+            
+            # Aplicar filtros
+            df_filtrado = df_diferencas[
+                (df_diferencas['tipo'].isin(tipos_selecionados)) &
+                (df_diferencas['pagina'].isin(paginas_selecionadas))
+            ]
+            
+            # Tabela Resumo das Diferenças (retrátil)
+            with st.expander("📋 Tabela Resumo das Diferenças", expanded=False):
                 if len(df_filtrado) != len(df_diferencas):
-                    st.subheader("📋 Resultados Filtrados")
-                    st.dataframe(
-                        df_filtrado,
-                        use_container_width=True,
-                        column_config={
-                            "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
-                            "linha": st.column_config.NumberColumn("Linha", format="%d"),
-                            "tipo": st.column_config.TextColumn("Tipo"),
-                            "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
-                            "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
-                        }
-                    )
-        
-        # Gerar e oferecer download do relatório
-        st.subheader("📥 Download do Relatório")
-        
-        relatorio_html = st.session_state.comparador.gerar_relatorio_html_melhorado(
-            diferencas, 
-            diferencas_detalhadas,
-            st.session_state.arquivo_ref_nome, 
-            st.session_state.arquivo_novo_nome
-        )
-        
-        # Criar nome do arquivo com timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        nome_relatorio = f"relatorio_comparacao_visual_{timestamp}.html"
-        
-        # Botão de download
-        st.markdown(
-            criar_link_download(relatorio_html, nome_relatorio),
-            unsafe_allow_html=True
-        )
-        
-        st.info("💡 O relatório visual contém comparação lado a lado com cores para destacar as diferenças, similar ao exemplo que você mostrou!")
+                    st.info(f"📊 Mostrando {len(df_filtrado)} de {len(df_diferencas)} diferenças (filtros aplicados)")
+                
+                # Configurar exibição da tabela
+                st.dataframe(
+                    df_filtrado,
+                    use_container_width=True,
+                    column_config={
+                        "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
+                        "linha": st.column_config.NumberColumn("Linha", format="%d"),
+                        "tipo": st.column_config.TextColumn("Tipo"),
+                        "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
+                        "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
+                    }
+                )
+                
+                # Estatísticas dos dados filtrados
+                if len(df_filtrado) > 0:
+                    st.markdown("### 📈 Estatísticas dos Dados Filtrados")
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric("Total de Alterações", len(df_filtrado))
+                    
+                    with col2:
+                        paginas_filtradas = len(df_filtrado['pagina'].unique())
+                        st.metric("Páginas Afetadas", paginas_filtradas)
+                    
+                    with col3:
+                        tipos_filtrados = len(df_filtrado['tipo'].unique())
+                        st.metric("Tipos de Mudança", tipos_filtrados)
         
         if not diferencas:
             st.balloons()
