@@ -1,7 +1,7 @@
 """
 📚 Document Comparator - Aplicação Streamlit
-Compara dois arquivos (PDF ou Word) e gera relatório de diferenças
-Versão com visualização de texto alterado grifado
+Compara dois arquivos (PDF ou Word) e mostra diferenças lado a lado
+Versão com frases completas e identificação clara de alterações
 """
 
 import streamlit as st
@@ -33,111 +33,136 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado para visualização de texto grifado
+# CSS customizado para comparação lado a lado
 st.markdown("""
 <style>
-    /* Estilo para texto alterado grifado */
-    .text-highlight-container {
+    /* Estilo para comparação lado a lado */
+    .comparison-container {
         background: white;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        margin: 15px 0;
+        margin: 20px 0;
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .highlight-header {
+    .page-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 12px 20px;
+        padding: 15px 20px;
         font-weight: bold;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
     
-    .highlight-content {
+    .comparison-content {
+        display: flex;
+        min-height: 400px;
+    }
+    
+    .document-side {
+        flex: 1;
+        padding: 0;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    .document-side:last-child {
+        border-right: none;
+    }
+    
+    .document-title {
+        background: #f8f9fa;
+        padding: 12px 20px;
+        font-weight: bold;
+        color: #495057;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: center;
+    }
+    
+    .document-content {
         padding: 20px;
         font-family: 'Georgia', 'Times New Roman', serif;
         font-size: 14px;
         line-height: 1.8;
         background: #fafafa;
+        min-height: 350px;
     }
     
-    .line-context {
-        margin: 8px 0;
-        padding: 8px 12px;
-        border-radius: 4px;
+    .sentence-block {
+        margin: 12px 0;
+        padding: 10px 15px;
+        border-radius: 6px;
+        border-left: 4px solid transparent;
         position: relative;
     }
     
-    .line-number {
-        display: inline-block;
-        width: 35px;
-        color: #666;
-        font-weight: bold;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        margin-right: 15px;
-        text-align: right;
+    .sentence-normal {
+        background-color: #f9f9f9;
+        border-left-color: #e0e0e0;
+        color: #555;
     }
     
-    .line-text {
-        display: inline;
-    }
-    
-    .text-removed {
-        background-color: #ffebee;
-        border-left: 4px solid #f44336;
-        text-decoration: line-through;
-        color: #c62828;
-    }
-    
-    .text-added {
+    .sentence-added {
         background-color: #e8f5e8;
-        border-left: 4px solid #4caf50;
+        border-left-color: #4caf50;
         color: #2e7d32;
         font-weight: 500;
     }
     
-    .text-normal {
-        background-color: #f9f9f9;
-        border-left: 4px solid #e0e0e0;
-        color: #555;
+    .sentence-removed {
+        background-color: #ffebee;
+        border-left-color: #f44336;
+        color: #c62828;
+        text-decoration: line-through;
     }
     
-    .page-info {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-        padding: 10px 15px;
-        margin: 10px 0;
-        font-size: 13px;
-        color: #495057;
+    .sentence-modified {
+        background-color: #fff3cd;
+        border-left-color: #ffc107;
+        color: #856404;
+    }
+    
+    .line-number {
+        position: absolute;
+        left: -35px;
+        top: 10px;
+        width: 30px;
+        font-size: 11px;
+        color: #666;
+        font-family: 'Courier New', monospace;
+        text-align: right;
     }
     
     .change-indicator {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        margin-right: 8px;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        font-size: 12px;
+        font-weight: bold;
     }
     
-    .indicator-added { background-color: #4caf50; }
-    .indicator-removed { background-color: #f44336; }
+    .indicator-added { color: #4caf50; }
+    .indicator-removed { color: #f44336; }
+    .indicator-modified { color: #ff9800; }
     
-    .summary-card {
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    
+    .stat-card {
         background: white;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 20px;
-        margin: 15px 0;
         text-align: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    .summary-number {
+    .stat-number {
         font-size: 2.5em;
         font-weight: bold;
         color: #667eea;
@@ -145,12 +170,12 @@ st.markdown("""
         margin-bottom: 5px;
     }
     
-    .summary-label {
+    .stat-label {
         color: #666;
         font-size: 0.9em;
     }
     
-    .legend-highlight {
+    .legend-container {
         display: flex;
         justify-content: center;
         gap: 30px;
@@ -161,7 +186,7 @@ st.markdown("""
         border: 1px solid #e0e0e0;
     }
     
-    .legend-item-highlight {
+    .legend-item {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -169,23 +194,49 @@ st.markdown("""
     }
     
     .legend-sample {
-        padding: 4px 8px;
-        border-radius: 3px;
-        font-family: 'Courier New', monospace;
+        padding: 6px 12px;
+        border-radius: 4px;
         font-size: 12px;
+        border-left: 3px solid;
     }
     
-    .legend-added-sample {
-        background-color: #e8f5e8;
-        border-left: 3px solid #4caf50;
+    .legend-added { 
+        background-color: #e8f5e8; 
+        border-left-color: #4caf50; 
+        color: #2e7d32; 
+    }
+    
+    .legend-removed { 
+        background-color: #ffebee; 
+        border-left-color: #f44336; 
+        color: #c62828; 
+        text-decoration: line-through; 
+    }
+    
+    .legend-modified { 
+        background-color: #fff3cd; 
+        border-left-color: #ffc107; 
+        color: #856404; 
+    }
+    
+    .no-changes {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+        border: 2px dashed #4caf50;
+        border-radius: 12px;
+        margin: 20px 0;
+    }
+    
+    .no-changes h2 {
         color: #2e7d32;
+        font-size: 2rem;
+        margin-bottom: 15px;
     }
     
-    .legend-removed-sample {
-        background-color: #ffebee;
-        border-left: 3px solid #f44336;
-        color: #c62828;
-        text-decoration: line-through;
+    .no-changes p {
+        color: #4caf50;
+        font-size: 1.1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -200,8 +251,7 @@ class DocumentComparator:
     def __init__(self):
         self.texto_ref = []
         self.texto_novo = []
-        self.diferencas = []
-        self.alteracoes_grifadas = []
+        self.comparacoes_lado_a_lado = []
         self.tipo_ref = None
         self.tipo_novo = None
         
@@ -356,9 +406,30 @@ class DocumentComparator:
             st.error(f"❌ Erro ao extrair texto: {str(e)}")
             return []
     
-    def gerar_alteracoes_grifadas(self, texto_ref: List[str], texto_novo: List[str]) -> List[Dict]:
-        """Gera visualização de texto com alterações grifadas"""
-        alteracoes_grifadas = []
+    def dividir_em_sentencas(self, texto: str) -> List[str]:
+        """Divide o texto em sentenças mais inteligentemente"""
+        # Dividir por quebras de linha primeiro
+        linhas = texto.split('\n')
+        sentencas = []
+        
+        for linha in linhas:
+            linha = linha.strip()
+            if linha:
+                # Dividir por pontos, mas preservar números decimais
+                partes = re.split(r'(?<!\d)\.(?!\d)', linha)
+                for parte in partes:
+                    parte = parte.strip()
+                    if parte:
+                        sentencas.append(parte)
+            else:
+                # Preservar linhas vazias como separadores
+                sentencas.append("")
+        
+        return sentencas
+    
+    def gerar_comparacao_lado_a_lado(self, texto_ref: List[str], texto_novo: List[str]) -> List[Dict]:
+        """Gera comparação lado a lado com frases completas"""
+        comparacoes = []
         
         max_paginas = max(len(texto_ref), len(texto_novo))
         progress_bar = st.progress(0)
@@ -369,194 +440,215 @@ class DocumentComparator:
             novo = texto_novo[i] if i < len(texto_novo) else ""
             
             if ref.strip() != novo.strip():
-                # Dividir em linhas para comparação detalhada
-                linhas_ref = ref.splitlines()
-                linhas_novo = novo.splitlines()
+                # Dividir em sentenças
+                sentencas_ref = self.dividir_em_sentencas(ref)
+                sentencas_novo = self.dividir_em_sentencas(novo)
                 
-                # Usar SequenceMatcher para encontrar diferenças mais precisas
-                matcher = difflib.SequenceMatcher(None, linhas_ref, linhas_novo)
+                # Usar SequenceMatcher para encontrar diferenças
+                matcher = difflib.SequenceMatcher(None, sentencas_ref, sentencas_novo)
                 
-                linhas_contexto = []
-                linha_atual = 1
+                blocos_ref = []
+                blocos_novo = []
+                total_alteracoes = 0
                 
                 for tag, i1, i2, j1, j2 in matcher.get_opcodes():
                     if tag == 'equal':
-                        # Linhas iguais - mostrar algumas para contexto
-                        for idx in range(i1, min(i1 + 2, i2)):  # Mostrar até 2 linhas de contexto
-                            if idx < len(linhas_ref):
-                                linhas_contexto.append({
-                                    'numero': linha_atual + idx,
-                                    'texto': linhas_ref[idx],
+                        # Sentenças iguais
+                        for idx in range(i1, i2):
+                            if idx < len(sentencas_ref) and sentencas_ref[idx].strip():
+                                blocos_ref.append({
+                                    'linha': idx + 1,
+                                    'texto': sentencas_ref[idx],
                                     'tipo': 'normal'
                                 })
-                        linha_atual += (i2 - i1)
                         
+                        for idx in range(j1, j2):
+                            if idx < len(sentencas_novo) and sentencas_novo[idx].strip():
+                                blocos_novo.append({
+                                    'linha': idx + 1,
+                                    'texto': sentencas_novo[idx],
+                                    'tipo': 'normal'
+                                })
+                                
                     elif tag == 'delete':
-                        # Linhas removidas
+                        # Sentenças removidas
                         for idx in range(i1, i2):
-                            if idx < len(linhas_ref):
-                                linhas_contexto.append({
-                                    'numero': linha_atual + idx,
-                                    'texto': linhas_ref[idx],
+                            if idx < len(sentencas_ref) and sentencas_ref[idx].strip():
+                                blocos_ref.append({
+                                    'linha': idx + 1,
+                                    'texto': sentencas_ref[idx],
                                     'tipo': 'removido'
                                 })
-                        linha_atual += (i2 - i1)
+                                total_alteracoes += 1
                         
+                        # Adicionar espaço vazio no lado novo
+                        for idx in range(i1, i2):
+                            if idx < len(sentencas_ref) and sentencas_ref[idx].strip():
+                                blocos_novo.append({
+                                    'linha': idx + 1,
+                                    'texto': '[TEXTO REMOVIDO]',
+                                    'tipo': 'vazio'
+                                })
+                                
                     elif tag == 'insert':
-                        # Linhas adicionadas
+                        # Sentenças adicionadas
                         for idx in range(j1, j2):
-                            if idx < len(linhas_novo):
-                                linhas_contexto.append({
-                                    'numero': linha_atual,
-                                    'texto': linhas_novo[idx],
+                            if idx < len(sentencas_novo) and sentencas_novo[idx].strip():
+                                blocos_novo.append({
+                                    'linha': idx + 1,
+                                    'texto': sentencas_novo[idx],
                                     'tipo': 'adicionado'
                                 })
+                                total_alteracoes += 1
                         
+                        # Adicionar espaço vazio no lado referência
+                        for idx in range(j1, j2):
+                            if idx < len(sentencas_novo) and sentencas_novo[idx].strip():
+                                blocos_ref.append({
+                                    'linha': idx + 1,
+                                    'texto': '[TEXTO ADICIONADO NO NOVO DOCUMENTO]',
+                                    'tipo': 'vazio'
+                                })
+                                
                     elif tag == 'replace':
-                        # Linhas modificadas - mostrar ambas
-                        for idx in range(i1, i2):
-                            if idx < len(linhas_ref):
-                                linhas_contexto.append({
-                                    'numero': linha_atual + idx,
-                                    'texto': linhas_ref[idx],
-                                    'tipo': 'removido'
-                                })
+                        # Sentenças modificadas
+                        max_len = max(i2 - i1, j2 - j1)
                         
-                        for idx in range(j1, j2):
-                            if idx < len(linhas_novo):
-                                linhas_contexto.append({
-                                    'numero': linha_atual + (idx - j1),
-                                    'texto': linhas_novo[idx],
-                                    'tipo': 'adicionado'
-                                })
-                        
-                        linha_atual += max(i2 - i1, j2 - j1)
+                        for idx in range(max_len):
+                            # Lado referência
+                            if idx < (i2 - i1) and (i1 + idx) < len(sentencas_ref):
+                                texto_ref_atual = sentencas_ref[i1 + idx]
+                                if texto_ref_atual.strip():
+                                    blocos_ref.append({
+                                        'linha': i1 + idx + 1,
+                                        'texto': texto_ref_atual,
+                                        'tipo': 'modificado'
+                                    })
+                                    total_alteracoes += 1
+                            
+                            # Lado novo
+                            if idx < (j2 - j1) and (j1 + idx) < len(sentencas_novo):
+                                texto_novo_atual = sentencas_novo[j1 + idx]
+                                if texto_novo_atual.strip():
+                                    blocos_novo.append({
+                                        'linha': j1 + idx + 1,
+                                        'texto': texto_novo_atual,
+                                        'tipo': 'modificado'
+                                    })
                 
-                if linhas_contexto:
-                    alteracoes_grifadas.append({
+                if blocos_ref or blocos_novo:
+                    comparacoes.append({
                         'pagina': i + 1,
-                        'linhas': linhas_contexto,
-                        'total_alteracoes': len([l for l in linhas_contexto if l['tipo'] != 'normal'])
+                        'blocos_ref': blocos_ref,
+                        'blocos_novo': blocos_novo,
+                        'total_alteracoes': total_alteracoes
                     })
             
             progress_bar.progress((i + 1) / max_paginas)
         
         progress_bar.empty()
-        return alteracoes_grifadas
-    
-    def comparar_textos_simples(self, texto_ref: List[str], texto_novo: List[str]) -> List[Dict]:
-        """Compara textos e retorna diferenças simples para tabela"""
-        diferencas_simples = []
-        
-        max_paginas = max(len(texto_ref), len(texto_novo))
-        
-        for i in range(max_paginas):
-            # Garantir que ambos os textos existam
-            ref = texto_ref[i] if i < len(texto_ref) else ""
-            novo = texto_novo[i] if i < len(texto_novo) else ""
-            
-            if ref.strip() != novo.strip():
-                # Dividir em linhas para comparação detalhada
-                linhas_ref = ref.splitlines()
-                linhas_novo = novo.splitlines()
-                
-                # Usar difflib para encontrar diferenças linha por linha
-                differ = difflib.unified_diff(
-                    linhas_ref, 
-                    linhas_novo, 
-                    lineterm='',
-                    n=0  # Sem contexto para focar apenas nas diferenças
-                )
-                
-                diferenca_texto = list(differ)
-                
-                if diferenca_texto:
-                    # Processar diferenças linha por linha para tabela simples
-                    linha_atual = 0
-                    for linha in diferenca_texto:
-                        if linha.startswith('@@'):
-                            # Extrair número da linha do cabeçalho @@
-                            try:
-                                partes = linha.split()
-                                if len(partes) >= 2:
-                                    linha_info = partes[1].split(',')[0]
-                                    linha_atual = abs(int(linha_info))
-                            except:
-                                linha_atual += 1
-                        elif linha.startswith('-'):
-                            # Linha removida
-                            diferencas_simples.append({
-                                'pagina': i + 1,
-                                'linha': linha_atual,
-                                'tipo': 'Removido',
-                                'conteudo_original': linha[1:],
-                                'conteudo_novo': ''
-                            })
-                        elif linha.startswith('+'):
-                            # Linha adicionada
-                            diferencas_simples.append({
-                                'pagina': i + 1,
-                                'linha': linha_atual,
-                                'tipo': 'Adicionado',
-                                'conteudo_original': '',
-                                'conteudo_novo': linha[1:]
-                            })
-                        
-                        if linha.startswith(('+', '-')):
-                            linha_atual += 1
-        
-        return diferencas_simples
+        return comparacoes
 
-def exibir_texto_grifado(alteracoes_grifadas: List[Dict]):
-    """Exibe o texto com alterações grifadas como uma 'foto' do documento"""
-    if not alteracoes_grifadas:
-        st.success("✅ Nenhuma alteração encontrada!")
+def exibir_comparacao_lado_a_lado(comparacoes: List[Dict], nome_ref: str, nome_novo: str):
+    """Exibe a comparação lado a lado com frases completas"""
+    if not comparacoes:
+        st.markdown("""
+        <div class="no-changes">
+            <h2>✅ Documentos Idênticos</h2>
+            <p>Nenhuma diferença foi encontrada entre os documentos analisados.</p>
+            <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                💡 Os documentos possuem conteúdo textual idêntico.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         return
     
     # Legenda
     st.markdown("""
-    <div class="legend-highlight">
-        <div class="legend-item-highlight">
-            <span class="legend-sample legend-added-sample">Texto adicionado</span>
+    <div class="legend-container">
+        <div class="legend-item">
+            <span class="legend-sample legend-added">Texto adicionado</span>
         </div>
-        <div class="legend-item-highlight">
-            <span class="legend-sample legend-removed-sample">Texto removido</span>
+        <div class="legend-item">
+            <span class="legend-sample legend-removed">Texto removido</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-sample legend-modified">Texto modificado</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Exibir cada página com alterações
-    for alteracao in alteracoes_grifadas:
-        # Cabeçalho da página
+    # Exibir cada página com diferenças
+    for comparacao in comparacoes:
         st.markdown(f"""
-        <div class="text-highlight-container">
-            <div class="highlight-header">
-                <span>🔸 Página/Seção {alteracao['pagina']}</span>
-                <span>{alteracao['total_alteracoes']} alteração(ões) encontrada(s)</span>
+        <div class="comparison-container">
+            <div class="page-header">
+                <span>🔸 Página/Seção {comparacao['pagina']}</span>
+                <span>{comparacao['total_alteracoes']} alteração(ões) encontrada(s)</span>
             </div>
-            <div class="highlight-content">
+            <div class="comparison-content">
+                <div class="document-side">
+                    <div class="document-title">📄 {nome_ref}</div>
+                    <div class="document-content">
         """, unsafe_allow_html=True)
         
-        # Exibir linhas com contexto
-        for linha in alteracao['linhas']:
-            tipo_classe = f"text-{linha['tipo']}"
-            
-            # Determinar o indicador visual
+        # Exibir blocos do documento de referência
+        for bloco in comparacao['blocos_ref']:
+            tipo_classe = f"sentence-{bloco['tipo']}"
             indicador = ""
-            if linha['tipo'] == 'adicionado':
-                indicador = '<span class="change-indicator indicator-added"></span>'
-            elif linha['tipo'] == 'removido':
-                indicador = '<span class="change-indicator indicator-removed"></span>'
+            
+            if bloco['tipo'] == 'removido':
+                indicador = '<span class="change-indicator indicator-removed">🗑️</span>'
+            elif bloco['tipo'] == 'modificado':
+                indicador = '<span class="change-indicator indicator-modified">✏️</span>'
+            elif bloco['tipo'] == 'vazio':
+                tipo_classe = "sentence-normal"
+                bloco['texto'] = ""
             
             st.markdown(f"""
-                <div class="line-context {tipo_classe}">
-                    <span class="line-number">{linha['numero']}</span>
+                <div class="sentence-block {tipo_classe}">
+                    <span class="line-number">{bloco['linha']}</span>
                     {indicador}
-                    <span class="line-text">{linha['texto']}</span>
+                    {bloco['texto']}
                 </div>
             """, unsafe_allow_html=True)
         
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        st.markdown("""
+                    </div>
+                </div>
+                <div class="document-side">
+                    <div class="document-title">📄 """ + nome_novo + """</div>
+                    <div class="document-content">
+        """, unsafe_allow_html=True)
+        
+        # Exibir blocos do novo documento
+        for bloco in comparacao['blocos_novo']:
+            tipo_classe = f"sentence-{bloco['tipo']}"
+            indicador = ""
+            
+            if bloco['tipo'] == 'adicionado':
+                indicador = '<span class="change-indicator indicator-added">➕</span>'
+            elif bloco['tipo'] == 'modificado':
+                indicador = '<span class="change-indicator indicator-modified">✏️</span>'
+            elif bloco['tipo'] == 'vazio':
+                tipo_classe = "sentence-normal"
+                bloco['texto'] = ""
+            
+            st.markdown(f"""
+                <div class="sentence-block {tipo_classe}">
+                    <span class="line-number">{bloco['linha']}</span>
+                    {indicador}
+                    {bloco['texto']}
+                </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("""
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.markdown("<br>", unsafe_allow_html=True)
 
 def main():
@@ -564,7 +656,7 @@ def main():
     
     # Título e descrição
     st.title("📚 Document Comparator")
-    st.markdown("**Compare dois documentos e visualize apenas o texto alterado, como uma 'foto' grifada**")
+    st.markdown("**Compare dois documentos lado a lado com frases completas e identificação clara das alterações**")
     
     # Verificar se python-docx está disponível
     if not DOCX_AVAILABLE:
@@ -578,7 +670,7 @@ def main():
         1. Faça upload do documento de referência
         2. Faça upload do novo documento
         3. Clique em 'Comparar Documentos'
-        4. Visualize apenas o texto alterado
+        4. Visualize as diferenças lado a lado
         5. Veja número da página e linha
         
         **Formatos suportados:**
@@ -586,14 +678,16 @@ def main():
         - Word (.docx)
         
         **Funcionalidades:**
-        - ✅ Visualização de texto grifado
+        - ✅ Visualização lado a lado
         - ✅ Numeração de páginas e linhas
+        - ✅ Frases completas
         - ✅ Contexto das alterações
         - ✅ Layout como "foto" do documento
         
         **Dicas:**
         - Verde: texto adicionado
         - Vermelho riscado: texto removido
+        - Amarelo: texto modificado
         - Cinza: contexto (texto inalterado)
         """)
     
@@ -664,95 +758,82 @@ def main():
                     st.error("❌ Erro ao extrair texto dos documentos")
                     st.stop()
                 
-                # Gerar visualização de texto grifado
-                st.info("🔍 Analisando alterações...")
-                alteracoes_grifadas = st.session_state.comparador.gerar_alteracoes_grifadas(texto_ref, texto_novo)
-                
-                # Gerar diferenças simples para tabela
-                diferencas_simples = st.session_state.comparador.comparar_textos_simples(texto_ref, texto_novo)
+                # Gerar comparação lado a lado
+                st.info("🔍 Analisando diferenças...")
+                comparacoes = st.session_state.comparador.gerar_comparacao_lado_a_lado(texto_ref, texto_novo)
                 
                 # Armazenar resultados no session state
-                st.session_state.alteracoes_grifadas = alteracoes_grifadas
-                st.session_state.diferencas = diferencas_simples
+                st.session_state.comparacoes = comparacoes
                 st.session_state.arquivo_ref_nome = arquivo_ref.name
                 st.session_state.arquivo_novo_nome = arquivo_novo.name
                 st.session_state.tipo_ref = tipo_ref
                 st.session_state.tipo_novo = tipo_novo
     
     # Exibir resultados se existirem
-    if 'alteracoes_grifadas' in st.session_state:
-        alteracoes_grifadas = st.session_state.alteracoes_grifadas
-        diferencas = st.session_state.diferencas
+    if 'comparacoes' in st.session_state:
+        comparacoes = st.session_state.comparacoes
         
         st.divider()
         
         # Resumo dos resultados
+        total_alteracoes = sum(comp['total_alteracoes'] for comp in comparacoes)
+        paginas_afetadas = len(comparacoes)
+        
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.markdown(f"""
-            <div class="summary-card">
-                <span class="summary-number">{len(diferencas)}</span>
-                <div class="summary-label">Alterações Encontradas</div>
+            <div class="stat-card">
+                <span class="stat-number">{total_alteracoes}</span>
+                <div class="stat-label">Alterações Encontradas</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
-            paginas_afetadas = len(alteracoes_grifadas)
             st.markdown(f"""
-            <div class="summary-card">
-                <span class="summary-number">{paginas_afetadas}</span>
-                <div class="summary-label">Páginas/Seções Afetadas</div>
+            <div class="stat-card">
+                <span class="stat-number">{paginas_afetadas}</span>
+                <div class="stat-label">Páginas/Seções Afetadas</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
-            total_linhas_alteradas = sum(alt['total_alteracoes'] for alt in alteracoes_grifadas)
+            tipos_alteracao = set()
+            for comp in comparacoes:
+                for bloco in comp['blocos_ref'] + comp['blocos_novo']:
+                    if bloco['tipo'] in ['adicionado', 'removido', 'modificado']:
+                        tipos_alteracao.add(bloco['tipo'])
+            
             st.markdown(f"""
-            <div class="summary-card">
-                <span class="summary-number">{total_linhas_alteradas}</span>
-                <div class="summary-label">Linhas Modificadas</div>
+            <div class="stat-card">
+                <span class="stat-number">{len(tipos_alteracao)}</span>
+                <div class="stat-label">Tipos de Alteração</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col4:
             compatibilidade = "✅ Mesmos tipos" if st.session_state.tipo_ref == st.session_state.tipo_novo else "⚠️ Tipos diferentes"
             st.markdown(f"""
-            <div class="summary-card">
-                <span class="summary-number" style="font-size: 1.2em;">{compatibilidade}</span>
-                <div class="summary-label">Compatibilidade</div>
+            <div class="stat-card">
+                <span class="stat-number" style="font-size: 1.2em;">{compatibilidade}</span>
+                <div class="stat-label">Compatibilidade</div>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Exibir texto grifado
-        if alteracoes_grifadas:
-            st.subheader("📝 Texto Alterado (Visualização Grifada)")
-            st.markdown("*Visualize apenas o que foi alterado, com número da página e linha:*")
-            exibir_texto_grifado(alteracoes_grifadas)
-        else:
-            st.success("✅ Nenhuma diferença encontrada entre os documentos!")
-            st.balloons()
+        # Exibir comparação lado a lado
+        st.subheader("📋 Comparação Lado a Lado")
+        st.markdown("*Visualize as diferenças com frases completas, número da página e linha:*")
         
-        # Tabela resumo (opcional, em expander)
-        if diferencas:
-            with st.expander("📋 Ver Tabela Resumo das Diferenças", expanded=False):
-                # Converter para DataFrame para melhor visualização
-                df_diferencas = pd.DataFrame(diferencas)
-                
-                # Configurar exibição da tabela
-                st.dataframe(
-                    df_diferencas,
-                    use_container_width=True,
-                    column_config={
-                        "pagina": st.column_config.NumberColumn("Página/Seção", format="%d"),
-                        "linha": st.column_config.NumberColumn("Linha", format="%d"),
-                        "tipo": st.column_config.TextColumn("Tipo"),
-                        "conteudo_original": st.column_config.TextColumn("Conteúdo Original"),
-                        "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
-                    }
-                )
+        exibir_comparacao_lado_a_lado(
+            comparacoes, 
+            st.session_state.arquivo_ref_nome, 
+            st.session_state.arquivo_novo_nome
+        )
+        
+        if not comparacoes:
+            st.balloons()
 
 if __name__ == "__main__":
     main()
