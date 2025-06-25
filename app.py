@@ -1,7 +1,7 @@
 """
 📚 Document Comparator - Aplicação Streamlit
 Compara dois arquivos (PDF ou Word) e gera relatório de diferenças
-Versão com filtros aplicados à visualização e organização por parágrafos
+Versão que ignora deslocamentos e foca apenas em alterações reais de conteúdo
 """
 
 import streamlit as st
@@ -11,7 +11,7 @@ import pandas as pd
 import io
 from datetime import datetime
 import base64
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Set
 import logging
 from pathlib import Path
 import tempfile
@@ -162,46 +162,6 @@ st.markdown("""
         border-radius: 4px;
     }
     
-    /* Melhorar tabelas do difflib */
-    .diff table {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        margin: 0;
-    }
-    
-    .diff th {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        text-align: left;
-        border: 1px solid #dee2e6;
-        font-weight: bold;
-        color: #495057;
-    }
-    
-    .diff td {
-        padding: 4px 8px;
-        border: 1px solid #dee2e6;
-        vertical-align: top;
-        word-wrap: break-word;
-    }
-    
-    .diff_add {
-        background-color: #d4edda !important;
-        border-left: 3px solid #28a745 !important;
-    }
-    
-    .diff_sub {
-        background-color: #f8d7da !important;
-        border-left: 3px solid #dc3545 !important;
-    }
-    
-    .diff_chg {
-        background-color: #fff3cd !important;
-        border-left: 3px solid #ffc107 !important;
-    }
-    
     .filtro-info {
         background: #e3f2fd;
         border: 1px solid #2196f3;
@@ -209,6 +169,16 @@ st.markdown("""
         padding: 10px 15px;
         margin: 10px 0;
         color: #1976d2;
+        font-size: 0.9em;
+    }
+    
+    .algoritmo-info {
+        background: #f3e5f5;
+        border: 1px solid #9c27b0;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+        color: #7b1fa2;
         font-size: 0.9em;
     }
 </style>
@@ -380,8 +350,29 @@ class DocumentComparator:
             st.error(f"❌ Erro ao extrair texto: {str(e)}")
             return []
     
+    def normalizar_texto(self, texto: str) -> str:
+        """Normaliza o texto removendo variações que não são alterações reais"""
+        # Remover espaços extras e quebras de linha desnecessárias
+        texto = re.sub(r'\s+', ' ', texto.strip())
+        
+        # Remover caracteres de controle e formatação
+        texto = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', texto)
+        
+        # Normalizar pontuação (remover espaços antes de pontos, vírgulas, etc.)
+        texto = re.sub(r'\s+([,.;:!?])', r'\1', texto)
+        
+        # Normalizar aspas e caracteres especiais
+        texto = re.sub(r'["""]', '"', texto)
+        texto = re.sub(r'[''']', "'", texto)
+        texto = re.sub(r'[–—]', '-', texto)
+        
+        return texto
+    
     def dividir_em_paragrafos(self, texto: str) -> List[str]:
         """Divide o texto em parágrafos de forma inteligente"""
+        # Normalizar o texto primeiro
+        texto = self.normalizar_texto(texto)
+        
         # Dividir por quebras de linha duplas primeiro (parágrafos naturais)
         paragrafos_brutos = re.split(r'\n\s*\n', texto)
         paragrafos = []
@@ -394,16 +385,103 @@ class DocumentComparator:
                     # Dividir por pontos finais, mas preservar números decimais
                     frases = re.split(r'(?<!\d)\.(?!\d)\s+', paragrafo)
                     for frase in frases:
-                        frase = frase.strip()
-                        if frase:
+                        frase = self.normalizar_texto(frase.strip())
+                        if frase and len(frase) > 10:  # Ignorar frases muito curtas
                             paragrafos.append(frase)
                 else:
-                    paragrafos.append(paragrafo)
+                    paragrafo_normalizado = self.normalizar_texto(paragrafo)
+                    if paragrafo_normalizado and len(paragrafo_normalizado) > 10:
+                        paragrafos.append(paragrafo_normalizado)
         
         return paragrafos
     
-    def comparar_textos_por_paragrafos(self, texto_ref: List[str], texto_novo: List[str]) -> Tuple[List[Dict], List[Dict]]:
-        """Compara textos por parágrafos e retorna diferenças simples e detalhadas"""
+    def calcular_similaridade(self, texto1: str, texto2: str) -> float:
+        """Calcula a similaridade entre dois textos (0.0 a 1.0)"""
+        if not texto1 and not texto2:
+            return 1.0
+        if not texto1 or not texto2:
+            return 0.0
+        
+        # Normalizar ambos os textos
+        texto1_norm = self.normalizar_texto(texto1)
+        texto2_norm = self.normalizar_texto(texto2)
+        
+        # Usar SequenceMatcher para calcular similaridade
+        matcher = difflib.SequenceMatcher(None, texto1_norm, texto2_norm)
+        return matcher.ratio()
+    
+    def encontrar_alteracoes_reais(self, paragrafos_ref: List[str], paragrafos_novo: List[str]) -> List[Dict]:
+        """Encontra apenas alterações reais de conteúdo, ignorando deslocamentos"""
+        alteracoes = []
+        
+        # Criar conjuntos de parágrafos únicos para comparação rápida
+        set_ref = set(paragrafos_ref)
+        set_novo = set(paragrafos_novo)
+        
+        # Encontrar parágrafos removidos (existem na referência mas não no novo)
+        paragrafos_removidos = set_ref - set_novo
+        
+        # Encontrar parágrafos adicionados (existem no novo mas não na referência)
+        paragrafos_adicionados = set_novo - set_ref
+        
+        # Para parágrafos modificados, precisamos fazer uma análise mais detalhada
+        paragrafos_modificados = []
+        
+        # Verificar se há parágrafos similares que podem ter sido modificados
+        for p_ref in paragrafos_removidos.copy():
+            melhor_match = None
+            melhor_similaridade = 0.0
+            
+            for p_novo in paragrafos_adicionados.copy():
+                similaridade = self.calcular_similaridade(p_ref, p_novo)
+                
+                # Se a similaridade for alta (>0.6), considerar como modificação
+                if similaridade > 0.6 and similaridade > melhor_similaridade:
+                    melhor_match = p_novo
+                    melhor_similaridade = similaridade
+            
+            # Se encontrou um match, é uma modificação, não remoção + adição
+            if melhor_match and melhor_similaridade > 0.6:
+                paragrafos_modificados.append({
+                    'original': p_ref,
+                    'novo': melhor_match,
+                    'similaridade': melhor_similaridade
+                })
+                paragrafos_removidos.discard(p_ref)
+                paragrafos_adicionados.discard(melhor_match)
+        
+        # Adicionar remoções reais
+        for paragrafo in paragrafos_removidos:
+            alteracoes.append({
+                'tipo': 'removido',
+                'texto': paragrafo,
+                'texto_original': paragrafo,
+                'texto_novo': ''
+            })
+        
+        # Adicionar adições reais
+        for paragrafo in paragrafos_adicionados:
+            alteracoes.append({
+                'tipo': 'adicionado',
+                'texto': paragrafo,
+                'texto_original': '',
+                'texto_novo': paragrafo
+            })
+        
+        # Adicionar modificações reais
+        for mod in paragrafos_modificados:
+            alteracoes.append({
+                'tipo': 'modificado',
+                'texto': f"ANTES: {mod['original']}\nDEPOIS: {mod['novo']}",
+                'texto_original': mod['original'],
+                'texto_novo': mod['novo'],
+                'similaridade': mod['similaridade']
+            })
+        
+        return alteracoes
+    
+    def comparar_textos_por_conteudo(self, texto_ref: List[str], texto_novo: List[str]) -> Tuple[List[Dict], List[Dict]]:
+        """Compara textos focando apenas em alterações reais de conteúdo"""
         diferencas_simples = []
         diferencas_detalhadas = []
         
@@ -415,102 +493,54 @@ class DocumentComparator:
             ref = texto_ref[i] if i < len(texto_ref) else ""
             novo = texto_novo[i] if i < len(texto_novo) else ""
             
-            if ref.strip() != novo.strip():
-                # Dividir em parágrafos
-                paragrafos_ref = self.dividir_em_paragrafos(ref)
-                paragrafos_novo = self.dividir_em_paragrafos(novo)
-                
-                # Usar SequenceMatcher para encontrar diferenças por parágrafo
-                matcher = difflib.SequenceMatcher(None, paragrafos_ref, paragrafos_novo)
-                
-                paragrafos_processados = []
+            # Dividir em parágrafos
+            paragrafos_ref = self.dividir_em_paragrafos(ref)
+            paragrafos_novo = self.dividir_em_paragrafos(novo)
+            
+            # Encontrar alterações reais (não deslocamentos)
+            alteracoes = self.encontrar_alteracoes_reais(paragrafos_ref, paragrafos_novo)
+            
+            if alteracoes:
+                # Processar alterações para a tabela simples
                 paragrafo_atual = 1
+                paragrafos_processados = []
                 
-                for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-                    if tag == 'equal':
-                        # Parágrafos iguais
-                        for idx in range(i1, i2):
-                            if idx < len(paragrafos_ref):
-                                paragrafos_processados.append({
-                                    'numero': paragrafo_atual + idx,
-                                    'texto': paragrafos_ref[idx],
-                                    'tipo': 'normal'
-                                })
-                        paragrafo_atual += (i2 - i1)
-                        
-                    elif tag == 'delete':
-                        # Parágrafos removidos
-                        for idx in range(i1, i2):
-                            if idx < len(paragrafos_ref):
-                                diferencas_simples.append({
-                                    'pagina': i + 1,
-                                    'paragrafo': paragrafo_atual + idx,
-                                    'tipo': 'Removido',
-                                    'conteudo_original': paragrafos_ref[idx],
-                                    'conteudo_novo': ''
-                                })
-                                paragrafos_processados.append({
-                                    'numero': paragrafo_atual + idx,
-                                    'texto': paragrafos_ref[idx],
-                                    'tipo': 'removido'
-                                })
-                        paragrafo_atual += (i2 - i1)
-                        
-                    elif tag == 'insert':
-                        # Parágrafos adicionados
-                        for idx in range(j1, j2):
-                            if idx < len(paragrafos_novo):
-                                diferencas_simples.append({
-                                    'pagina': i + 1,
-                                    'paragrafo': paragrafo_atual,
-                                    'tipo': 'Adicionado',
-                                    'conteudo_original': '',
-                                    'conteudo_novo': paragrafos_novo[idx]
-                                })
-                                paragrafos_processados.append({
-                                    'numero': paragrafo_atual,
-                                    'texto': paragrafos_novo[idx],
-                                    'tipo': 'adicionado'
-                                })
-                        
-                    elif tag == 'replace':
-                        # Parágrafos modificados
-                        max_len = max(i2 - i1, j2 - j1)
-                        
-                        for idx in range(max_len):
-                            # Parágrafo original
-                            if idx < (i2 - i1) and (i1 + idx) < len(paragrafos_ref):
-                                texto_ref_atual = paragrafos_ref[i1 + idx]
-                                diferencas_simples.append({
-                                    'pagina': i + 1,
-                                    'paragrafo': paragrafo_atual + idx,
-                                    'tipo': 'Modificado (Original)',
-                                    'conteudo_original': texto_ref_atual,
-                                    'conteudo_novo': ''
-                                })
-                                paragrafos_processados.append({
-                                    'numero': paragrafo_atual + idx,
-                                    'texto': texto_ref_atual,
-                                    'tipo': 'modificado'
-                                })
-                            
-                            # Parágrafo novo
-                            if idx < (j2 - j1) and (j1 + idx) < len(paragrafos_novo):
-                                texto_novo_atual = paragrafos_novo[j1 + idx]
-                                diferencas_simples.append({
-                                    'pagina': i + 1,
-                                    'paragrafo': paragrafo_atual + idx,
-                                    'tipo': 'Modificado (Novo)',
-                                    'conteudo_original': '',
-                                    'conteudo_novo': texto_novo_atual
-                                })
-                                paragrafos_processados.append({
-                                    'numero': paragrafo_atual + idx,
-                                    'texto': texto_novo_atual,
-                                    'tipo': 'modificado'
-                                })
-                        
-                        paragrafo_atual += max_len
+                for alteracao in alteracoes:
+                    # Adicionar à tabela simples
+                    tipo_mapeado = {
+                        'removido': 'Removido',
+                        'adicionado': 'Adicionado',
+                        'modificado': 'Modificado'
+                    }[alteracao['tipo']]
+                    
+                    diferencas_simples.append({
+                        'pagina': i + 1,
+                        'paragrafo': paragrafo_atual,
+                        'tipo': tipo_mapeado,
+                        'conteudo_original': alteracao['texto_original'],
+                        'conteudo_novo': alteracao['texto_novo']
+                    })
+                    
+                    # Adicionar aos parágrafos processados para visualização
+                    paragrafos_processados.append({
+                        'numero': paragrafo_atual,
+                        'texto': alteracao['texto'],
+                        'tipo': alteracao['tipo']
+                    })
+                    
+                    paragrafo_atual += 1
+                
+                # Adicionar parágrafos inalterados para contexto (limitado)
+                paragrafos_inalterados = set(paragrafos_ref) & set(paragrafos_novo)
+                contexto_adicionado = 0
+                
+                for paragrafo in list(paragrafos_inalterados)[:3]:  # Máximo 3 para contexto
+                    paragrafos_processados.append({
+                        'numero': paragrafo_atual + contexto_adicionado,
+                        'texto': paragrafo,
+                        'tipo': 'normal'
+                    })
+                    contexto_adicionado += 1
                 
                 if paragrafos_processados:
                     diferencas_detalhadas.append({
@@ -518,7 +548,8 @@ class DocumentComparator:
                         'paragrafos': paragrafos_processados,
                         'total_paragrafos_ref': len(paragrafos_ref),
                         'total_paragrafos_novo': len(paragrafos_novo),
-                        'total_alteracoes': len([p for p in paragrafos_processados if p['tipo'] != 'normal'])
+                        'total_alteracoes': len(alteracoes),
+                        'total_contexto': contexto_adicionado
                     })
             
             progress_bar.progress((i + 1) / max_paginas)
@@ -529,7 +560,13 @@ class DocumentComparator:
 def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_filtro: List[str] = None, paginas_filtro: List[int] = None):
     """Exibe as diferenças por parágrafos com filtros aplicados"""
     if not diferencas_detalhadas:
-        st.success("✅ Nenhuma diferença encontrada!")
+        st.success("✅ Nenhuma diferença de conteúdo encontrada!")
+        st.markdown("""
+        <div class="algoritmo-info">
+            🎯 <strong>Algoritmo Inteligente:</strong> Este comparador ignora mudanças de posicionamento e formatação, 
+            focando apenas em alterações reais de conteúdo. Parágrafos que apenas mudaram de posição não são considerados alterações.
+        </div>
+        """, unsafe_allow_html=True)
         return
     
     # Aplicar filtros
@@ -546,7 +583,7 @@ def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_fi
             tipo_mapeado = {
                 'adicionado': 'Adicionado',
                 'removido': 'Removido', 
-                'modificado': 'Modificado (Original)',
+                'modificado': 'Modificado',
                 'normal': 'Normal'
             }.get(paragrafo['tipo'], paragrafo['tipo'])
             
@@ -565,14 +602,23 @@ def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_fi
     
     st.subheader("🔍 Comparação Visual por Página e Parágrafo")
     
+    # Informação sobre o algoritmo
+    st.markdown("""
+    <div class="algoritmo-info">
+        🎯 <strong>Algoritmo Inteligente:</strong> Este comparador ignora mudanças de posicionamento e formatação, 
+        focando apenas em alterações reais de conteúdo. Parágrafos similares (>60% de similaridade) são considerados modificações, 
+        não remoções + adições separadas.
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Legenda
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("🟢 **Verde:** Parágrafo Adicionado")
+        st.markdown("🟢 **Verde:** Conteúdo Adicionado")
     with col2:
-        st.markdown("🔴 **Vermelho:** Parágrafo Removido")
+        st.markdown("🔴 **Vermelho:** Conteúdo Removido")
     with col3:
-        st.markdown("🟡 **Amarelo:** Parágrafo Modificado")
+        st.markdown("🟡 **Amarelo:** Conteúdo Modificado")
     
     # Informação sobre filtros aplicados
     if tipos_filtro or paginas_filtro:
@@ -596,7 +642,7 @@ def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_fi
         <div class="paragrafo-container">
             <div class="paragrafo-header">
                 <span>🔸 Página/Seção {diff_detail['pagina']}</span>
-                <span>{diff_detail.get('total_alteracoes_filtradas', diff_detail['total_alteracoes'])} alteração(ões) encontrada(s)</span>
+                <span>{diff_detail.get('total_alteracoes_filtradas', diff_detail['total_alteracoes'])} alteração(ões) de conteúdo | {diff_detail.get('total_contexto', 0)} parágrafo(s) de contexto</span>
             </div>
             <div class="paragrafo-content">
         """, unsafe_allow_html=True)
@@ -605,12 +651,28 @@ def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_fi
         for paragrafo in diff_detail['paragrafos']:
             tipo_classe = f"paragrafo-{paragrafo['tipo']}"
             
-            st.markdown(f"""
-                <div class="{tipo_classe}">
-                    <span class="paragrafo-numero">§{paragrafo['numero']}</span>
-                    <span class="paragrafo-texto">{paragrafo['texto']}</span>
-                </div>
-            """, unsafe_allow_html=True)
+            # Para modificações, mostrar antes e depois
+            if paragrafo['tipo'] == 'modificado' and '\nDEPOIS:' in paragrafo['texto']:
+                partes = paragrafo['texto'].split('\nDEPOIS:')
+                antes = partes[0].replace('ANTES:', '').strip()
+                depois = partes[1].strip()
+                
+                st.markdown(f"""
+                    <div class="{tipo_classe}">
+                        <span class="paragrafo-numero">§{paragrafo['numero']}</span>
+                        <div class="paragrafo-texto">
+                            <strong>ANTES:</strong><br>{antes}<br><br>
+                            <strong>DEPOIS:</strong><br>{depois}
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                    <div class="{tipo_classe}">
+                        <span class="paragrafo-numero">§{paragrafo['numero']}</span>
+                        <span class="paragrafo-texto">{paragrafo['texto']}</span>
+                    </div>
+                """, unsafe_allow_html=True)
         
         st.markdown("</div></div>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -620,7 +682,7 @@ def main():
     
     # Título e descrição
     st.title("📚 Document Comparator")
-    st.markdown("**Compare dois documentos (PDF ou Word) e identifique as diferenças por parágrafo**")
+    st.markdown("**Compare dois documentos (PDF ou Word) e identifique apenas as alterações reais de conteúdo**")
     
     # Verificar se python-docx está disponível
     if not DOCX_AVAILABLE:
@@ -634,23 +696,24 @@ def main():
         1. Faça upload do documento de referência
         2. Faça upload do novo documento
         3. Clique em 'Comparar Documentos'
-        4. Visualize as diferenças por parágrafo
+        4. Visualize apenas as alterações reais de conteúdo
         5. Use os filtros para análise específica
         
         **Formatos suportados:**
         - PDF (.pdf)
         - Word (.docx)
         
-        **Funcionalidades:**
-        - ✅ Comparação por parágrafos
-        - ✅ Filtros aplicados à visualização
-        - ✅ Numeração de páginas e parágrafos
-        - ✅ Identificação clara de alterações
+        **Algoritmo Inteligente:**
+        - ✅ Ignora mudanças de posicionamento
+        - ✅ Ignora alterações de formatação
+        - ✅ Foca apenas em conteúdo real
+        - ✅ Detecta modificações (não remoção + adição)
+        - ✅ Normaliza texto para comparação precisa
         
         **Dicas:**
         - Funciona melhor com documentos de texto
-        - Parágrafos longos são divididos automaticamente
-        - Use os filtros para focar em tipos específicos de alteração
+        - Parágrafos são normalizados automaticamente
+        - Similaridade >60% = modificação, não nova alteração
         """)
     
     # Inicializar o comparador
@@ -720,9 +783,9 @@ def main():
                     st.error("❌ Erro ao extrair texto dos documentos")
                     st.stop()
                 
-                # Comparar textos por parágrafos
-                st.info("🔍 Comparando textos por parágrafos...")
-                diferencas_simples, diferencas_detalhadas = st.session_state.comparador.comparar_textos_por_paragrafos(texto_ref, texto_novo)
+                # Comparar textos focando apenas em conteúdo
+                st.info("🔍 Analisando alterações reais de conteúdo...")
+                diferencas_simples, diferencas_detalhadas = st.session_state.comparador.comparar_textos_por_conteudo(texto_ref, texto_novo)
                 
                 # Armazenar resultados no session state
                 st.session_state.diferencas = diferencas_simples
@@ -748,7 +811,7 @@ def main():
             st.markdown(f"""
             <div class="metric-container">
                 <div class="metric-value">{len(diferencas)}</div>
-                <div class="metric-label">Diferenças Encontradas</div>
+                <div class="metric-label">Alterações Reais</div>
             </div>
             """, unsafe_allow_html=True)
         
@@ -787,7 +850,7 @@ def main():
             <div class="filtros-container">
                 <div class="filtros-title">🔍 Filtros Avançados</div>
                 <div class="filtros-content">
-                    <p style="margin-bottom: 15px; text-align: center;">Use os filtros abaixo para analisar tipos específicos de alterações na visualização e tabela</p>
+                    <p style="margin-bottom: 15px; text-align: center;">Use os filtros abaixo para analisar tipos específicos de alterações reais de conteúdo</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
