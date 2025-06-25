@@ -1,7 +1,7 @@
 """
 📚 Document Comparator - Aplicação Streamlit
 Compara dois arquivos (PDF ou Word) e gera relatório de diferenças
-Versão com layout limpo e profissional
+Versão com visualização de texto alterado grifado
 """
 
 import streamlit as st
@@ -33,90 +33,124 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado para layout mais limpo
+# CSS customizado para visualização de texto grifado
 st.markdown("""
 <style>
-    /* Estilo para comparação lado a lado */
-    .comparison-container {
-        display: flex;
-        gap: 20px;
-        margin: 20px 0;
-    }
-    
-    .document-column {
-        flex: 1;
+    /* Estilo para texto alterado grifado */
+    .text-highlight-container {
         background: white;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
+        margin: 15px 0;
         overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .document-header {
-        background: #f8f9fa;
-        padding: 12px 16px;
-        border-bottom: 1px solid #e0e0e0;
+    .highlight-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
         font-weight: bold;
-        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
-    .document-content {
-        padding: 16px;
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        line-height: 1.4;
-        max-height: 600px;
-        overflow-y: auto;
+    .highlight-content {
+        padding: 20px;
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 14px;
+        line-height: 1.8;
+        background: #fafafa;
+    }
+    
+    .line-context {
+        margin: 8px 0;
+        padding: 8px 12px;
+        border-radius: 4px;
+        position: relative;
     }
     
     .line-number {
         display: inline-block;
-        width: 40px;
+        width: 35px;
         color: #666;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        margin-right: 15px;
         text-align: right;
-        margin-right: 12px;
-        user-select: none;
     }
     
-    .line-content {
+    .line-text {
         display: inline;
     }
     
-    .diff-line {
-        margin: 2px 0;
-        padding: 2px 4px;
-        border-radius: 3px;
+    .text-removed {
+        background-color: #ffebee;
+        border-left: 4px solid #f44336;
+        text-decoration: line-through;
+        color: #c62828;
     }
     
-    .diff-added {
-        background-color: #d4edda;
-        border-left: 3px solid #28a745;
+    .text-added {
+        background-color: #e8f5e8;
+        border-left: 4px solid #4caf50;
+        color: #2e7d32;
+        font-weight: 500;
     }
     
-    .diff-removed {
-        background-color: #f8d7da;
-        border-left: 3px solid #dc3545;
+    .text-normal {
+        background-color: #f9f9f9;
+        border-left: 4px solid #e0e0e0;
+        color: #555;
     }
     
-    .diff-changed {
-        background-color: #fff3cd;
-        border-left: 3px solid #ffc107;
+    .page-info {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 10px 15px;
+        margin: 10px 0;
+        font-size: 13px;
+        color: #495057;
     }
     
-    .diff-normal {
-        background-color: transparent;
+    .change-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
     }
     
-    .page-indicator {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 12px 20px;
-        margin: 20px 0;
+    .indicator-added { background-color: #4caf50; }
+    .indicator-removed { background-color: #f44336; }
+    
+    .summary-card {
+        background: white;
+        border: 1px solid #e0e0e0;
         border-radius: 8px;
-        font-weight: bold;
+        padding: 20px;
+        margin: 15px 0;
         text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    .legend-container {
+    .summary-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #667eea;
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .summary-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .legend-highlight {
         display: flex;
         justify-content: center;
         gap: 30px;
@@ -127,84 +161,31 @@ st.markdown("""
         border: 1px solid #e0e0e0;
     }
     
-    .legend-item {
+    .legend-item-highlight {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 14px;
+        font-weight: 500;
     }
     
-    .legend-color {
-        width: 16px;
-        height: 16px;
+    .legend-sample {
+        padding: 4px 8px;
         border-radius: 3px;
-        border: 1px solid #ccc;
-    }
-    
-    .legend-added { background-color: #d4edda; border-left: 3px solid #28a745; }
-    .legend-removed { background-color: #f8d7da; border-left: 3px solid #dc3545; }
-    .legend-changed { background-color: #fff3cd; border-left: 3px solid #ffc107; }
-    
-    /* Melhorar tabelas do difflib */
-    .diff table {
-        width: 100%;
-        border-collapse: collapse;
         font-family: 'Courier New', monospace;
         font-size: 12px;
-        margin: 0;
     }
     
-    .diff th {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        text-align: left;
-        border: 1px solid #dee2e6;
-        font-weight: bold;
-        color: #495057;
+    .legend-added-sample {
+        background-color: #e8f5e8;
+        border-left: 3px solid #4caf50;
+        color: #2e7d32;
     }
     
-    .diff td {
-        padding: 4px 8px;
-        border: 1px solid #dee2e6;
-        vertical-align: top;
-        word-wrap: break-word;
-    }
-    
-    .diff_add {
-        background-color: #d4edda !important;
-        border-left: 3px solid #28a745 !important;
-    }
-    
-    .diff_sub {
-        background-color: #f8d7da !important;
-        border-left: 3px solid #dc3545 !important;
-    }
-    
-    .diff_chg {
-        background-color: #fff3cd !important;
-        border-left: 3px solid #ffc107 !important;
-    }
-    
-    /* Estilo para métricas */
-    .metric-container {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    .metric-value {
-        font-size: 2em;
-        font-weight: bold;
-        color: #667eea;
-        margin-bottom: 5px;
-    }
-    
-    .metric-label {
-        color: #666;
-        font-size: 0.9em;
+    .legend-removed-sample {
+        background-color: #ffebee;
+        border-left: 3px solid #f44336;
+        color: #c62828;
+        text-decoration: line-through;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -220,7 +201,7 @@ class DocumentComparator:
         self.texto_ref = []
         self.texto_novo = []
         self.diferencas = []
-        self.diferencas_detalhadas = []
+        self.alteracoes_grifadas = []
         self.tipo_ref = None
         self.tipo_novo = None
         
@@ -375,13 +356,99 @@ class DocumentComparator:
             st.error(f"❌ Erro ao extrair texto: {str(e)}")
             return []
     
-    def comparar_textos_detalhado(self, texto_ref: List[str], texto_novo: List[str]) -> Tuple[List[Dict], List[Dict]]:
-        """Compara textos e retorna diferenças simples e detalhadas"""
-        diferencas_simples = []
-        diferencas_detalhadas = []
+    def gerar_alteracoes_grifadas(self, texto_ref: List[str], texto_novo: List[str]) -> List[Dict]:
+        """Gera visualização de texto com alterações grifadas"""
+        alteracoes_grifadas = []
         
         max_paginas = max(len(texto_ref), len(texto_novo))
         progress_bar = st.progress(0)
+        
+        for i in range(max_paginas):
+            # Garantir que ambos os textos existam
+            ref = texto_ref[i] if i < len(texto_ref) else ""
+            novo = texto_novo[i] if i < len(texto_novo) else ""
+            
+            if ref.strip() != novo.strip():
+                # Dividir em linhas para comparação detalhada
+                linhas_ref = ref.splitlines()
+                linhas_novo = novo.splitlines()
+                
+                # Usar SequenceMatcher para encontrar diferenças mais precisas
+                matcher = difflib.SequenceMatcher(None, linhas_ref, linhas_novo)
+                
+                linhas_contexto = []
+                linha_atual = 1
+                
+                for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+                    if tag == 'equal':
+                        # Linhas iguais - mostrar algumas para contexto
+                        for idx in range(i1, min(i1 + 2, i2)):  # Mostrar até 2 linhas de contexto
+                            if idx < len(linhas_ref):
+                                linhas_contexto.append({
+                                    'numero': linha_atual + idx,
+                                    'texto': linhas_ref[idx],
+                                    'tipo': 'normal'
+                                })
+                        linha_atual += (i2 - i1)
+                        
+                    elif tag == 'delete':
+                        # Linhas removidas
+                        for idx in range(i1, i2):
+                            if idx < len(linhas_ref):
+                                linhas_contexto.append({
+                                    'numero': linha_atual + idx,
+                                    'texto': linhas_ref[idx],
+                                    'tipo': 'removido'
+                                })
+                        linha_atual += (i2 - i1)
+                        
+                    elif tag == 'insert':
+                        # Linhas adicionadas
+                        for idx in range(j1, j2):
+                            if idx < len(linhas_novo):
+                                linhas_contexto.append({
+                                    'numero': linha_atual,
+                                    'texto': linhas_novo[idx],
+                                    'tipo': 'adicionado'
+                                })
+                        
+                    elif tag == 'replace':
+                        # Linhas modificadas - mostrar ambas
+                        for idx in range(i1, i2):
+                            if idx < len(linhas_ref):
+                                linhas_contexto.append({
+                                    'numero': linha_atual + idx,
+                                    'texto': linhas_ref[idx],
+                                    'tipo': 'removido'
+                                })
+                        
+                        for idx in range(j1, j2):
+                            if idx < len(linhas_novo):
+                                linhas_contexto.append({
+                                    'numero': linha_atual + (idx - j1),
+                                    'texto': linhas_novo[idx],
+                                    'tipo': 'adicionado'
+                                })
+                        
+                        linha_atual += max(i2 - i1, j2 - j1)
+                
+                if linhas_contexto:
+                    alteracoes_grifadas.append({
+                        'pagina': i + 1,
+                        'linhas': linhas_contexto,
+                        'total_alteracoes': len([l for l in linhas_contexto if l['tipo'] != 'normal'])
+                    })
+            
+            progress_bar.progress((i + 1) / max_paginas)
+        
+        progress_bar.empty()
+        return alteracoes_grifadas
+    
+    def comparar_textos_simples(self, texto_ref: List[str], texto_novo: List[str]) -> List[Dict]:
+        """Compara textos e retorna diferenças simples para tabela"""
+        diferencas_simples = []
+        
+        max_paginas = max(len(texto_ref), len(texto_novo))
         
         for i in range(max_paginas):
             # Garantir que ambos os textos existam
@@ -437,407 +504,59 @@ class DocumentComparator:
                         
                         if linha.startswith(('+', '-')):
                             linha_atual += 1
-                
-                # Criar comparação visual lado a lado para esta página
-                differ_html = difflib.HtmlDiff(wrapcolumn=80)
-                diff_html = differ_html.make_table(
-                    linhas_ref,
-                    linhas_novo,
-                    fromdesc='Documento de Referência',
-                    todesc='Novo Documento',
-                    context=True,
-                    numlines=3
-                )
-                
-                diferencas_detalhadas.append({
-                    'pagina': i + 1,
-                    'html_diff': diff_html,
-                    'total_linhas_ref': len(linhas_ref),
-                    'total_linhas_novo': len(linhas_novo)
-                })
-            
-            progress_bar.progress((i + 1) / max_paginas)
         
-        progress_bar.empty()
-        return diferencas_simples, diferencas_detalhadas
-    
-    def gerar_relatorio_html_limpo(self, diferencas: List[Dict], diferencas_detalhadas: List[Dict], nome_ref: str, nome_novo: str) -> str:
-        """Gera relatório HTML com layout limpo e profissional"""
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Relatório de Comparação - {nome_ref} vs {nome_novo}</title>
-            <style>
-                * {{
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }}
-                
-                body {{ 
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    background: #f8f9fa;
-                }}
-                
-                .container {{
-                    max-width: 1400px;
-                    margin: 0 auto;
-                    background: white;
-                    min-height: 100vh;
-                }}
-                
-                .header {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 2rem;
-                    text-align: center;
-                }}
-                
-                .header h1 {{
-                    font-size: 2.5rem;
-                    font-weight: 300;
-                    margin-bottom: 0.5rem;
-                }}
-                
-                .header p {{
-                    opacity: 0.9;
-                    font-size: 1.1rem;
-                }}
-                
-                .content {{
-                    padding: 2rem;
-                }}
-                
-                .summary {{
-                    background: #f8f9fa;
-                    border: 1px solid #e9ecef;
-                    border-radius: 8px;
-                    padding: 1.5rem;
-                    margin-bottom: 2rem;
-                }}
-                
-                .summary h2 {{
-                    color: #495057;
-                    margin-bottom: 1rem;
-                    font-size: 1.5rem;
-                }}
-                
-                .stats {{
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 1rem;
-                    margin: 1rem 0;
-                }}
-                
-                .stat-card {{
-                    background: white;
-                    border: 1px solid #e9ecef;
-                    border-radius: 6px;
-                    padding: 1.5rem;
-                    text-align: center;
-                }}
-                
-                .stat-number {{
-                    font-size: 2.5rem;
-                    font-weight: bold;
-                    color: #667eea;
-                    display: block;
-                }}
-                
-                .stat-label {{
-                    color: #6c757d;
-                    font-size: 0.9rem;
-                    margin-top: 0.5rem;
-                }}
-                
-                .files-info {{
-                    background: #e8f5e8;
-                    border: 1px solid #c3e6c3;
-                    border-radius: 8px;
-                    padding: 1.5rem;
-                    margin-bottom: 2rem;
-                }}
-                
-                .files-info h2 {{
-                    color: #2e7d32;
-                    margin-bottom: 1rem;
-                }}
-                
-                .file-item {{
-                    margin: 0.5rem 0;
-                    font-size: 1rem;
-                }}
-                
-                .legend {{
-                    display: flex;
-                    justify-content: center;
-                    gap: 2rem;
-                    margin: 2rem 0;
-                    padding: 1rem;
-                    background: #f8f9fa;
-                    border: 1px solid #e9ecef;
-                    border-radius: 8px;
-                }}
-                
-                .legend-item {{
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    font-weight: 500;
-                }}
-                
-                .legend-color {{
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 4px;
-                    border: 1px solid #ccc;
-                }}
-                
-                .legend-added {{ background: #d4edda; border-left: 4px solid #28a745; }}
-                .legend-removed {{ background: #f8d7da; border-left: 4px solid #dc3545; }}
-                .legend-changed {{ background: #fff3cd; border-left: 4px solid #ffc107; }}
-                
-                .page-section {{
-                    margin: 2rem 0;
-                    border: 1px solid #e9ecef;
-                    border-radius: 8px;
-                    overflow: hidden;
-                    background: white;
-                }}
-                
-                .page-header {{
-                    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-                    color: white;
-                    padding: 1rem 1.5rem;
-                    font-weight: 600;
-                    font-size: 1.1rem;
-                }}
-                
-                .diff-content {{
-                    padding: 0;
-                }}
-                
-                table.diff {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-                    font-size: 13px;
-                    line-height: 1.4;
-                }}
-                
-                .diff th {{
-                    background: #f8f9fa;
-                    padding: 0.75rem;
-                    text-align: left;
-                    border-bottom: 2px solid #dee2e6;
-                    font-weight: 600;
-                    color: #495057;
-                    font-size: 0.9rem;
-                }}
-                
-                .diff td {{
-                    padding: 0.5rem 0.75rem;
-                    border-bottom: 1px solid #f1f3f4;
-                    vertical-align: top;
-                    word-wrap: break-word;
-                    max-width: 0;
-                    overflow-wrap: break-word;
-                }}
-                
-                .diff_add {{
-                    background-color: #d4edda !important;
-                    border-left: 4px solid #28a745 !important;
-                }}
-                
-                .diff_sub {{
-                    background-color: #f8d7da !important;
-                    border-left: 4px solid #dc3545 !important;
-                }}
-                
-                .diff_chg {{
-                    background-color: #fff3cd !important;
-                    border-left: 4px solid #ffc107 !important;
-                }}
-                
-                .no-differences {{
-                    text-align: center;
-                    padding: 4rem 2rem;
-                    background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-                    border: 2px dashed #4caf50;
-                    border-radius: 12px;
-                    margin: 2rem 0;
-                }}
-                
-                .no-differences h2 {{
-                    color: #2e7d32;
-                    font-size: 2rem;
-                    margin-bottom: 1rem;
-                }}
-                
-                .no-differences p {{
-                    color: #4caf50;
-                    font-size: 1.1rem;
-                }}
-                
-                .footer {{
-                    background: #f8f9fa;
-                    border-top: 1px solid #e9ecef;
-                    padding: 2rem;
-                    text-align: center;
-                    color: #6c757d;
-                }}
-                
-                @media print {{
-                    .container {{ box-shadow: none; }}
-                    .header {{ background: #667eea !important; }}
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📄 Relatório de Comparação</h1>
-                    <p>Análise detalhada das diferenças entre documentos</p>
-                    <p style="font-size: 0.9rem; margin-top: 1rem;">
-                        Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}
-                    </p>
-                </div>
-                
-                <div class="content">
-                    <div class="files-info">
-                        <h2>📋 Documentos Analisados</h2>
-                        <div class="file-item">
-                            <strong>Documento de Referência:</strong> {nome_ref}
-                        </div>
-                        <div class="file-item">
-                            <strong>Novo Documento:</strong> {nome_novo}
-                        </div>
-                    </div>
-                    
-                    <div class="summary">
-                        <h2>📊 Resumo da Análise</h2>
-                        <div class="stats">
-                            <div class="stat-card">
-                                <span class="stat-number">{len(diferencas)}</span>
-                                <div class="stat-label">Diferenças Encontradas</div>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number">{len(set(d['pagina'] for d in diferencas)) if diferencas else 0}</span>
-                                <div class="stat-label">Páginas/Seções Afetadas</div>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number">{len(set(d['tipo'] for d in diferencas)) if diferencas else 0}</span>
-                                <div class="stat-label">Tipos de Alterações</div>
-                            </div>
-                        </div>
-                    </div>
-        """
-        
-        if diferencas_detalhadas:
-            html += """
-                    <div class="legend">
-                        <div class="legend-item">
-                            <div class="legend-color legend-added"></div>
-                            <span>Texto Adicionado</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-removed"></div>
-                            <span>Texto Removido</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color legend-changed"></div>
-                            <span>Texto Modificado</span>
-                        </div>
-                    </div>
-            """
-            
-            for diff_detail in diferencas_detalhadas:
-                html += f"""
-                    <div class="page-section">
-                        <div class="page-header">
-                            🔸 Página/Seção {diff_detail['pagina']} 
-                            <span style="font-weight: normal; opacity: 0.9;">
-                                ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)
-                            </span>
-                        </div>
-                        <div class="diff-content">
-                            {diff_detail['html_diff']}
-                        </div>
-                    </div>
-                """
-        else:
-            html += """
-                    <div class="no-differences">
-                        <h2>✅ Documentos Idênticos</h2>
-                        <p>Nenhuma diferença foi encontrada entre os documentos analisados.</p>
-                        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-                            💡 Esta análise considera apenas o conteúdo textual dos documentos.
-                        </p>
-                    </div>
-            """
-        
-        html += """
-                </div>
-                
-                <div class="footer">
-                    <p><strong>Document Comparator</strong> - Ferramenta de análise e comparação de documentos</p>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                        Para melhor experiência, visualize este relatório em um navegador web moderno
-                    </p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        
-        return html
+        return diferencas_simples
 
-def criar_link_download(conteudo: str, nome_arquivo: str, tipo_mime: str = "text/html"):
-    """Cria link de download para o conteúdo"""
-    b64 = base64.b64encode(conteudo.encode()).decode()
-    href = f'<a href="data:{tipo_mime};base64,{b64}" download="{nome_arquivo}">📥 Baixar {nome_arquivo}</a>'
-    return href
-
-def exibir_diferencas_limpo(diferencas_detalhadas: List[Dict]):
-    """Exibe as diferenças de forma limpa e organizada"""
-    if not diferencas_detalhadas:
-        st.success("✅ Nenhuma diferença encontrada!")
+def exibir_texto_grifado(alteracoes_grifadas: List[Dict]):
+    """Exibe o texto com alterações grifadas como uma 'foto' do documento"""
+    if not alteracoes_grifadas:
+        st.success("✅ Nenhuma alteração encontrada!")
         return
     
     # Legenda
     st.markdown("""
-    <div class="legend-container">
-        <div class="legend-item">
-            <div class="legend-color legend-added"></div>
-            <span><strong>Verde:</strong> Texto Adicionado</span>
+    <div class="legend-highlight">
+        <div class="legend-item-highlight">
+            <span class="legend-sample legend-added-sample">Texto adicionado</span>
         </div>
-        <div class="legend-item">
-            <div class="legend-color legend-removed"></div>
-            <span><strong>Vermelho:</strong> Texto Removido</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-changed"></div>
-            <span><strong>Amarelo:</strong> Texto Modificado</span>
+        <div class="legend-item-highlight">
+            <span class="legend-sample legend-removed-sample">Texto removido</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Exibir cada página com diferenças
-    for diff_detail in diferencas_detalhadas:
+    # Exibir cada página com alterações
+    for alteracao in alteracoes_grifadas:
+        # Cabeçalho da página
         st.markdown(f"""
-        <div class="page-indicator">
-            🔸 Página/Seção {diff_detail['pagina']} 
-            ({diff_detail['total_linhas_ref']} → {diff_detail['total_linhas_novo']} linhas)
-        </div>
+        <div class="text-highlight-container">
+            <div class="highlight-header">
+                <span>🔸 Página/Seção {alteracao['pagina']}</span>
+                <span>{alteracao['total_alteracoes']} alteração(ões) encontrada(s)</span>
+            </div>
+            <div class="highlight-content">
         """, unsafe_allow_html=True)
         
-        # Exibir diff com estilo melhorado
-        st.markdown(diff_detail['html_diff'], unsafe_allow_html=True)
+        # Exibir linhas com contexto
+        for linha in alteracao['linhas']:
+            tipo_classe = f"text-{linha['tipo']}"
+            
+            # Determinar o indicador visual
+            indicador = ""
+            if linha['tipo'] == 'adicionado':
+                indicador = '<span class="change-indicator indicator-added"></span>'
+            elif linha['tipo'] == 'removido':
+                indicador = '<span class="change-indicator indicator-removed"></span>'
+            
+            st.markdown(f"""
+                <div class="line-context {tipo_classe}">
+                    <span class="line-number">{linha['numero']}</span>
+                    {indicador}
+                    <span class="line-text">{linha['texto']}</span>
+                </div>
+            """, unsafe_allow_html=True)
         
+        st.markdown("</div></div>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
 def main():
@@ -845,7 +564,7 @@ def main():
     
     # Título e descrição
     st.title("📚 Document Comparator")
-    st.markdown("**Compare dois documentos (PDF ou Word) e identifique as diferenças de forma detalhada**")
+    st.markdown("**Compare dois documentos e visualize apenas o texto alterado, como uma 'foto' grifada**")
     
     # Verificar se python-docx está disponível
     if not DOCX_AVAILABLE:
@@ -859,21 +578,23 @@ def main():
         1. Faça upload do documento de referência
         2. Faça upload do novo documento
         3. Clique em 'Comparar Documentos'
-        4. Visualize as diferenças
-        5. Baixe o relatório
+        4. Visualize apenas o texto alterado
+        5. Veja número da página e linha
         
         **Formatos suportados:**
         - PDF (.pdf)
         - Word (.docx)
         
-        **Limitações:**
-        - Máximo 200MB por arquivo
-        - Documentos Word são divididos em seções de ~50 parágrafos
+        **Funcionalidades:**
+        - ✅ Visualização de texto grifado
+        - ✅ Numeração de páginas e linhas
+        - ✅ Contexto das alterações
+        - ✅ Layout como "foto" do documento
         
         **Dicas:**
-        - Funciona melhor com documentos de texto
-        - Imagens e formatação não são comparadas
-        - Layout limpo para apresentação profissional
+        - Verde: texto adicionado
+        - Vermelho riscado: texto removido
+        - Cinza: contexto (texto inalterado)
         """)
     
     # Inicializar o comparador
@@ -943,71 +664,76 @@ def main():
                     st.error("❌ Erro ao extrair texto dos documentos")
                     st.stop()
                 
-                # Comparar textos
-                st.info("🔍 Comparando textos...")
-                diferencas_simples, diferencas_detalhadas = st.session_state.comparador.comparar_textos_detalhado(texto_ref, texto_novo)
+                # Gerar visualização de texto grifado
+                st.info("🔍 Analisando alterações...")
+                alteracoes_grifadas = st.session_state.comparador.gerar_alteracoes_grifadas(texto_ref, texto_novo)
+                
+                # Gerar diferenças simples para tabela
+                diferencas_simples = st.session_state.comparador.comparar_textos_simples(texto_ref, texto_novo)
                 
                 # Armazenar resultados no session state
+                st.session_state.alteracoes_grifadas = alteracoes_grifadas
                 st.session_state.diferencas = diferencas_simples
-                st.session_state.diferencas_detalhadas = diferencas_detalhadas
                 st.session_state.arquivo_ref_nome = arquivo_ref.name
                 st.session_state.arquivo_novo_nome = arquivo_novo.name
                 st.session_state.tipo_ref = tipo_ref
                 st.session_state.tipo_novo = tipo_novo
     
     # Exibir resultados se existirem
-    if 'diferencas' in st.session_state and 'diferencas_detalhadas' in st.session_state:
+    if 'alteracoes_grifadas' in st.session_state:
+        alteracoes_grifadas = st.session_state.alteracoes_grifadas
         diferencas = st.session_state.diferencas
-        diferencas_detalhadas = st.session_state.diferencas_detalhadas
         
         st.divider()
         
-        # Resumo dos resultados com layout melhorado
-        st.subheader("📊 Resumo da Análise")
-        
+        # Resumo dos resultados
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-value">{len(diferencas)}</div>
-                <div class="metric-label">Diferenças Encontradas</div>
+            <div class="summary-card">
+                <span class="summary-number">{len(diferencas)}</span>
+                <div class="summary-label">Alterações Encontradas</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
-            paginas_afetadas = len(set(d['pagina'] for d in diferencas)) if diferencas else 0
+            paginas_afetadas = len(alteracoes_grifadas)
             st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-value">{paginas_afetadas}</div>
-                <div class="metric-label">Páginas/Seções Afetadas</div>
+            <div class="summary-card">
+                <span class="summary-number">{paginas_afetadas}</span>
+                <div class="summary-label">Páginas/Seções Afetadas</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
-            tipos_mudanca = len(set(d['tipo'] for d in diferencas)) if diferencas else 0
+            total_linhas_alteradas = sum(alt['total_alteracoes'] for alt in alteracoes_grifadas)
             st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-value">{tipos_mudanca}</div>
-                <div class="metric-label">Tipos de Mudança</div>
+            <div class="summary-card">
+                <span class="summary-number">{total_linhas_alteradas}</span>
+                <div class="summary-label">Linhas Modificadas</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col4:
             compatibilidade = "✅ Mesmos tipos" if st.session_state.tipo_ref == st.session_state.tipo_novo else "⚠️ Tipos diferentes"
             st.markdown(f"""
-            <div class="metric-container">
-                <div class="metric-value" style="font-size: 1.2em;">{compatibilidade}</div>
-                <div class="metric-label">Compatibilidade</div>
+            <div class="summary-card">
+                <span class="summary-number" style="font-size: 1.2em;">{compatibilidade}</span>
+                <div class="summary-label">Compatibilidade</div>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Exibir comparação visual limpa
-        if diferencas_detalhadas:
-            st.subheader("🔍 Comparação Detalhada")
-            exibir_diferencas_limpo(diferencas_detalhadas)
+        # Exibir texto grifado
+        if alteracoes_grifadas:
+            st.subheader("📝 Texto Alterado (Visualização Grifada)")
+            st.markdown("*Visualize apenas o que foi alterado, com número da página e linha:*")
+            exibir_texto_grifado(alteracoes_grifadas)
+        else:
+            st.success("✅ Nenhuma diferença encontrada entre os documentos!")
+            st.balloons()
         
         # Tabela resumo (opcional, em expander)
         if diferencas:
@@ -1027,31 +753,6 @@ def main():
                         "conteudo_novo": st.column_config.TextColumn("Conteúdo Novo")
                     }
                 )
-        
-        # Gerar e oferecer download do relatório
-        st.subheader("📥 Download do Relatório")
-        
-        relatorio_html = st.session_state.comparador.gerar_relatorio_html_limpo(
-            diferencas, 
-            diferencas_detalhadas,
-            st.session_state.arquivo_ref_nome, 
-            st.session_state.arquivo_novo_nome
-        )
-        
-        # Criar nome do arquivo com timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        nome_relatorio = f"relatorio_comparacao_profissional_{timestamp}.html"
-        
-        # Botão de download
-        st.markdown(
-            criar_link_download(relatorio_html, nome_relatorio),
-            unsafe_allow_html=True
-        )
-        
-        st.info("💡 O relatório possui layout profissional e limpo, ideal para apresentação a gestores e stakeholders!")
-        
-        if not diferencas:
-            st.balloons()
 
 if __name__ == "__main__":
     main()
