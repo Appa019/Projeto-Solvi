@@ -38,7 +38,7 @@ st.markdown("""
 <style>
     /* Estilo para filtros em destaque */
     .filtros-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         color: white;
         padding: 20px;
         border-radius: 10px;
