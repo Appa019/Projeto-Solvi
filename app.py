@@ -27,7 +27,7 @@ except ImportError:
 
 # Configuração da página
 st.set_page_config(
-    page_title="Document Comparator",
+    page_title="Document Comparator - Solvi",
     page_icon="📚",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -36,6 +36,55 @@ st.set_page_config(
 # CSS customizado para destacar filtros e parágrafos
 st.markdown("""
 <style>
+    /* Estilo para o header com logo */
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        padding: 20px 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-text {
+        color: white;
+        flex: 1;
+    }
+    
+    .header-title {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin: 0;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .header-subtitle {
+        font-size: 1.1em;
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .logo-container {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logo-container img {
+        max-height: 60px;
+        max-width: 150px;
+        object-fit: contain;
+    }
+    
     /* Estilo para filtros em destaque */
     .filtros-container {
         background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
@@ -180,6 +229,23 @@ st.markdown("""
         margin: 15px 0;
         color: #7b1fa2;
         font-size: 0.9em;
+    }
+    
+    /* Responsividade para mobile */
+    @media (max-width: 768px) {
+        .header-container {
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
+        }
+        
+        .header-title {
+            font-size: 2em;
+        }
+        
+        .logo-container {
+            order: -1;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
