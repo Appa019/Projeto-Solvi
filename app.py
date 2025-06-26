@@ -27,7 +27,7 @@ except ImportError:
 
 # Configuração da página
 st.set_page_config(
-    page_title="Document Comparator - Solvi",
+    page_title="Comparador de PDFs - Solvi",
     page_icon="📚",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -747,8 +747,8 @@ def main():
     """Função principal da aplicação"""
     
     # Título e descrição
-    st.title("📚 Document Comparator")
-    st.markdown("**Compare dois documentos (PDF ou Word) e identifique apenas as alterações reais de conteúdo**")
+    st.title("📚 Comparador de PDFs - Solvi")
+    st.markdown("**Compare dois documentos (PDF ou Word) e identifique apenas as alterações.**")
     
     # Verificar se python-docx está disponível
     if not DOCX_AVAILABLE:
