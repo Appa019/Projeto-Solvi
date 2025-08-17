@@ -1,20 +1,37 @@
 # app.py - Aplicação Unificada Projeto Solvi
 
 import streamlit as st
-# Importar as funções 'main' de seus aplicativos, renomeando-as para evitar conflitos
-from app_cvm_modified import main as cvm_app
-from app_comparacao_modified import main as comparacao_app
+import sys
+import os
+
+# Adicionar o diretório atual ao path para garantir que os módulos sejam encontrados
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Configuração da página principal (deve ser a primeira chamada st)
+st.set_page_config(
+    page_title="Projeto Solvi - Ferramentas de Análise",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Importar as funções 'main' de seus aplicativos com tratamento de erro
+try:
+    from app_cvm_modified import main as cvm_app
+    CVM_AVAILABLE = True
+except ImportError as e:
+    st.error(f"Erro ao importar app_cvm_modified: {e}")
+    CVM_AVAILABLE = False
+
+try:
+    from app_comparacao_modified import main as comparacao_app
+    COMPARACAO_AVAILABLE = True
+except ImportError as e:
+    st.error(f"Erro ao importar app_comparacao_modified: {e}")
+    COMPARACAO_AVAILABLE = False
 
 def main():
     """Função principal da aplicação unificada"""
-    
-    # Configuração da página principal
-    st.set_page_config(
-        page_title="Projeto Solvi - Ferramentas de Análise",
-        page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
 
     # CSS customizado para a aplicação unificada
     st.markdown("""
@@ -133,6 +150,15 @@ def main():
             margin-right: 0.5rem;
         }
         
+        .error-box {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
         /* Responsividade */
         @media (max-width: 768px) {
             .main-title {
@@ -159,6 +185,26 @@ def main():
         <p class="main-subtitle">Central de Ferramentas de Análise Documental</p>
     </div>
     """, unsafe_allow_html=True)
+
+    # Verificar se os módulos foram importados corretamente
+    if not CVM_AVAILABLE or not COMPARACAO_AVAILABLE:
+        st.error("❌ Erro na importação dos módulos!")
+        st.markdown("""
+        <div class="error-box">
+            <h3>🔧 Para corrigir este problema:</h3>
+            <ol>
+                <li>Certifique-se de que os arquivos estão no mesmo diretório:</li>
+                <ul>
+                    <li><code>app.py</code></li>
+                    <li><code>app_cvm_modified.py</code></li>
+                    <li><code>app_comparacao_modified.py</code></li>
+                </ul>
+                <li>Execute o comando no diretório correto</li>
+                <li>Verifique se não há erros de sintaxe nos arquivos importados</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+        return
 
     # Sidebar com informações gerais
     with st.sidebar:
@@ -226,8 +272,15 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Chama a função principal do aplicativo CVM
-        cvm_app()
+        if CVM_AVAILABLE:
+            try:
+                # Chama a função principal do aplicativo CVM
+                cvm_app()
+            except Exception as e:
+                st.error(f"Erro ao executar o analisador FRE: {e}")
+                st.info("Tente recarregar a página ou verifique os logs do console.")
+        else:
+            st.error("❌ Módulo do Analisador FRE não disponível")
 
     # Conteúdo da segunda aba - Comparador de Documentos
     with tab2:
@@ -244,8 +297,15 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Chama a função principal do aplicativo de comparação
-        comparacao_app()
+        if COMPARACAO_AVAILABLE:
+            try:
+                # Chama a função principal do aplicativo de comparação
+                comparacao_app()
+            except Exception as e:
+                st.error(f"Erro ao executar o comparador de documentos: {e}")
+                st.info("Tente recarregar a página ou verifique os logs do console.")
+        else:
+            st.error("❌ Módulo do Comparador de Documentos não disponível")
 
     # Footer da aplicação
     st.markdown("---")
