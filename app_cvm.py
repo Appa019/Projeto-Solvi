@@ -24,6 +24,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Inicializar session state
+if 'analysis_results' not in st.session_state:
+    st.session_state.analysis_results = None
+if 'fre_filename' not in st.session_state:
+    st.session_state.fre_filename = None
+if 'analysis_completed' not in st.session_state:
+    st.session_state.analysis_completed = False
+
 # CSS customizado para design limpo
 st.markdown("""
 <style>
@@ -425,6 +433,14 @@ def main():
         if len(cvm_files) > 5:
             st.error("⚠️ Máximo de 5 documentos CVM permitidos!")
             cvm_files = cvm_files[:5]
+        
+        # Botão para limpar análise
+        if st.session_state.analysis_completed:
+            if st.button("🔄 Nova Análise", help="Limpar resultados e fazer nova análise"):
+                st.session_state.analysis_results = None
+                st.session_state.fre_filename = None
+                st.session_state.analysis_completed = False
+                st.rerun()
     
     # Área principal
     if not fre_file:
@@ -445,155 +461,166 @@ def main():
     if not cvm_files:
         st.warning("⚠️ Adicione pelo menos um documento CVM de referência para uma análise mais precisa.")
     
-    # Botão de análise
-    if st.button("🔍 Analisar FRE", type="primary"):
-        if not api_key:
-            st.error("⚠️ Chave API OpenAI é obrigatória!")
-            return
+    # Botão de análise (só aparece se não há análise em andamento)
+    if not st.session_state.analysis_completed:
+        if st.button("🔍 Analisar FRE", type="primary"):
+            if not api_key:
+                st.error("⚠️ Chave API OpenAI é obrigatória!")
+                return
+            
+            try:
+                # Inicializa o analisador
+                analyzer = FREAnalyzer(api_key)
+                
+                # Extrai texto do FRE
+                with st.spinner("📖 Extraindo texto do FRE..."):
+                    fre_text = analyzer.extract_text_from_file(fre_file)
+                    if not fre_text:
+                        st.error("❌ Não foi possível extrair texto do FRE!")
+                        return
+                
+                # Extrai texto dos documentos CVM
+                cvm_text = ""
+                if cvm_files:
+                    with st.spinner("📚 Processando documentos CVM..."):
+                        for cvm_file in cvm_files:
+                            cvm_content = analyzer.extract_text_from_file(cvm_file)
+                            cvm_text += f"\n\n--- {cvm_file.name} ---\n{cvm_content}"
+                
+                # Extrai seções do FRE
+                with st.spinner("🔍 Identificando seções do FRE..."):
+                    fre_sections = analyzer.extract_fre_sections(fre_text)
+                    
+                    if not fre_sections:
+                        st.warning("⚠️ Não foi possível identificar seções estruturadas. Analisando documento completo...")
+                        fre_sections = {"Documento Completo": fre_text[:10000]}
+                
+                # Análise das seções
+                st.markdown("### 🔄 Progresso da Análise")
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                analysis_results = []
+                total_sections = len(fre_sections)
+                
+                for i, (section_name, section_content) in enumerate(fre_sections.items()):
+                    status_text.text(f"Analisando: {section_name}")
+                    
+                    result = analyzer.analyze_fre_section(
+                        fre_text, cvm_text, section_name, section_content
+                    )
+                    
+                    if result:
+                        analysis_results.append(result)
+                    
+                    progress_bar.progress((i + 1) / total_sections)
+                    time.sleep(0.5)  # Pequena pausa para evitar rate limiting
+                
+                status_text.text("✅ Análise concluída!")
+                
+                # Salva resultados no session state
+                st.session_state.analysis_results = analysis_results
+                st.session_state.fre_filename = fre_file.name
+                st.session_state.analysis_completed = True
+                
+                # Força atualização da página para mostrar resultados
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Erro durante a análise: {str(e)}")
+    
+    # Exibe resultados se disponíveis
+    if st.session_state.analysis_completed and st.session_state.analysis_results:
+        analysis_results = st.session_state.analysis_results
         
-        try:
-            # Inicializa o analisador
-            analyzer = FREAnalyzer(api_key)
+        st.markdown("### 📊 Resultados da Análise")
+        
+        # Métricas gerais
+        col1, col2, col3, col4 = st.columns(4)
+        
+        total_pontos = sum(len(r.get('pontos_atencao', [])) for r in analysis_results)
+        criticos = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'CRITICO')
+        atencao = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'ATENCAO')
+        sugestoes = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'SUGESTAO')
+        
+        with col1:
+            st.metric("📋 Total de Pontos", total_pontos)
+        with col2:
+            st.metric("🔴 Críticos", criticos)
+        with col3:
+            st.metric("🟡 Atenção", atencao)
+        with col4:
+            st.metric("🟢 Sugestões", sugestoes)
+        
+        # Filtros
+        st.markdown("### 🔍 Filtros")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            categorias_disponiveis = list(set(r.get('secao', 'N/A') for r in analysis_results))
+            categoria_filtro = st.selectbox(
+                "Filtrar por categoria:",
+                ["Todas"] + categorias_disponiveis,
+                key="categoria_filter"
+            )
+        
+        with col2:
+            criticidade_filtro = st.selectbox(
+                "Filtrar por criticidade:",
+                ["Todas", "CRITICO", "ATENCAO", "SUGESTAO"],
+                key="criticidade_filter"
+            )
+        
+        # Aplica filtros e exibe resultados
+        for result in analysis_results:
+            if categoria_filtro != "Todas" and result.get('secao') != categoria_filtro:
+                continue
             
-            # Extrai texto do FRE
-            with st.spinner("📖 Extraindo texto do FRE..."):
-                fre_text = analyzer.extract_text_from_file(fre_file)
-                if not fre_text:
-                    st.error("❌ Não foi possível extrair texto do FRE!")
-                    return
+            pontos_filtrados = result.get('pontos_atencao', [])
+            if criticidade_filtro != "Todas":
+                pontos_filtrados = [p for p in pontos_filtrados if p.get('criticidade') == criticidade_filtro]
             
-            # Extrai texto dos documentos CVM
-            cvm_text = ""
-            if cvm_files:
-                with st.spinner("📚 Processando documentos CVM..."):
-                    for cvm_file in cvm_files:
-                        cvm_content = analyzer.extract_text_from_file(cvm_file)
-                        cvm_text += f"\n\n--- {cvm_file.name} ---\n{cvm_content}"
+            if not pontos_filtrados and criticidade_filtro != "Todas":
+                continue
             
-            # Extrai seções do FRE
-            with st.spinner("🔍 Identificando seções do FRE..."):
-                fre_sections = analyzer.extract_fre_sections(fre_text)
+            # Exibe seção
+            with st.expander(f"📑 {result.get('secao', 'Seção não identificada')}", expanded=False):
+                conformidade = result.get('conformidade', 'N/A')
+                if conformidade == 'CONFORME':
+                    st.success(f"✅ Status: {conformidade}")
+                elif conformidade == 'NAO_CONFORME':
+                    st.error(f"❌ Status: {conformidade}")
+                else:
+                    st.warning(f"⚠️ Status: {conformidade}")
                 
-                if not fre_sections:
-                    st.warning("⚠️ Não foi possível identificar seções estruturadas. Analisando documento completo...")
-                    fre_sections = {"Documento Completo": fre_text[:10000]}
-            
-            # Análise das seções
-            st.markdown("### 🔄 Progresso da Análise")
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            analysis_results = []
-            total_sections = len(fre_sections)
-            
-            for i, (section_name, section_content) in enumerate(fre_sections.items()):
-                status_text.text(f"Analisando: {section_name}")
+                st.write(f"**Resumo:** {result.get('resumo', 'N/A')}")
                 
-                result = analyzer.analyze_fre_section(
-                    fre_text, cvm_text, section_name, section_content
+                if pontos_filtrados:
+                    st.write("**Pontos de Atenção:**")
+                    for i, ponto in enumerate(pontos_filtrados, 1):
+                        criticidade = ponto.get('criticidade', 'N/A')
+                        emoji = "🔴" if criticidade == "CRITICO" else "🟡" if criticidade == "ATENCAO" else "🟢"
+                        
+                        st.write(f"{emoji} **Ponto {i}:** {ponto.get('problema', 'N/A')}")
+                        st.write(f"**Base legal:** {ponto.get('artigo_cvm', 'N/A')}")
+                        st.write(f"**Sugestão:** {ponto.get('sugestao', 'N/A')}")
+                        st.write("---")
+        
+        # Geração do relatório PDF
+        st.markdown("### 📄 Relatório em PDF")
+        if st.button("📥 Gerar Relatório PDF", type="secondary"):
+            with st.spinner("📄 Gerando relatório PDF..."):
+                analyzer = FREAnalyzer(api_key)
+                pdf_buffer = analyzer.generate_pdf_report(analysis_results, st.session_state.fre_filename)
+                
+                st.download_button(
+                    label="⬇️ Baixar Relatório PDF",
+                    data=pdf_buffer.getvalue(),
+                    file_name=f"relatorio_fre_analise_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                    mime="application/pdf"
                 )
                 
-                if result:
-                    analysis_results.append(result)
-                
-                progress_bar.progress((i + 1) / total_sections)
-                time.sleep(0.5)  # Pequena pausa para evitar rate limiting
-            
-            status_text.text("✅ Análise concluída!")
-            
-            # Exibe resultados
-            if analysis_results:
-                st.markdown("### 📊 Resultados da Análise")
-                
-                # Métricas gerais
-                col1, col2, col3, col4 = st.columns(4)
-                
-                total_pontos = sum(len(r.get('pontos_atencao', [])) for r in analysis_results)
-                criticos = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'CRITICO')
-                atencao = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'ATENCAO')
-                sugestoes = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'SUGESTAO')
-                
-                with col1:
-                    st.metric("📋 Total de Pontos", total_pontos)
-                with col2:
-                    st.metric("🔴 Críticos", criticos)
-                with col3:
-                    st.metric("🟡 Atenção", atencao)
-                with col4:
-                    st.metric("🟢 Sugestões", sugestoes)
-                
-                # Filtros
-                st.markdown("### 🔍 Filtros")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    categorias_disponiveis = list(set(r.get('secao', 'N/A') for r in analysis_results))
-                    categoria_filtro = st.selectbox(
-                        "Filtrar por categoria:",
-                        ["Todas"] + categorias_disponiveis
-                    )
-                
-                with col2:
-                    criticidade_filtro = st.selectbox(
-                        "Filtrar por criticidade:",
-                        ["Todas", "CRITICO", "ATENCAO", "SUGESTAO"]
-                    )
-                
-                # Aplica filtros e exibe resultados
-                for result in analysis_results:
-                    if categoria_filtro != "Todas" and result.get('secao') != categoria_filtro:
-                        continue
-                    
-                    pontos_filtrados = result.get('pontos_atencao', [])
-                    if criticidade_filtro != "Todas":
-                        pontos_filtrados = [p for p in pontos_filtrados if p.get('criticidade') == criticidade_filtro]
-                    
-                    if not pontos_filtrados and criticidade_filtro != "Todas":
-                        continue
-                    
-                    # Exibe seção
-                    with st.expander(f"📑 {result.get('secao', 'Seção não identificada')}", expanded=False):
-                        conformidade = result.get('conformidade', 'N/A')
-                        if conformidade == 'CONFORME':
-                            st.success(f"✅ Status: {conformidade}")
-                        elif conformidade == 'NAO_CONFORME':
-                            st.error(f"❌ Status: {conformidade}")
-                        else:
-                            st.warning(f"⚠️ Status: {conformidade}")
-                        
-                        st.write(f"**Resumo:** {result.get('resumo', 'N/A')}")
-                        
-                        if pontos_filtrados:
-                            st.write("**Pontos de Atenção:**")
-                            for i, ponto in enumerate(pontos_filtrados, 1):
-                                criticidade = ponto.get('criticidade', 'N/A')
-                                emoji = "🔴" if criticidade == "CRITICO" else "🟡" if criticidade == "ATENCAO" else "🟢"
-                                
-                                st.write(f"{emoji} **Ponto {i}:** {ponto.get('problema', 'N/A')}")
-                                st.write(f"**Base legal:** {ponto.get('artigo_cvm', 'N/A')}")
-                                st.write(f"**Sugestão:** {ponto.get('sugestao', 'N/A')}")
-                                st.write("---")
-                
-                # Geração do relatório PDF
-                st.markdown("### 📄 Relatório em PDF")
-                if st.button("📥 Gerar Relatório PDF", type="secondary"):
-                    with st.spinner("📄 Gerando relatório PDF..."):
-                        pdf_buffer = analyzer.generate_pdf_report(analysis_results, fre_file.name)
-                        
-                        st.download_button(
-                            label="⬇️ Baixar Relatório PDF",
-                            data=pdf_buffer.getvalue(),
-                            file_name=f"relatorio_fre_analise_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                            mime="application/pdf"
-                        )
-                        
-                        st.success("✅ Relatório PDF gerado com sucesso!")
-            
-            else:
-                st.error("❌ Não foi possível realizar a análise. Verifique os arquivos e tente novamente.")
-        
-        except Exception as e:
-            st.error(f"❌ Erro durante a análise: {str(e)}")
+                st.success("✅ Relatório PDF gerado com sucesso!")
 
 if __name__ == "__main__":
     main()
