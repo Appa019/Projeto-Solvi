@@ -3,4 +3,8 @@ PyMuPDF
 pandas
 python-docx
 pathlib
-
+PyPDF2
+python-docx
+reportlab
+Pillow
+openai
