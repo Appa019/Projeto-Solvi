@@ -16,6 +16,96 @@ import re
 from datetime import datetime
 import base64
 
+# Configuração da página
+st.set_page_config(
+    page_title="Analisador FRE vs Normas CVM",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Inicializar session state
+if 'analysis_results' not in st.session_state:
+    st.session_state.analysis_results = None
+if 'fre_filename' not in st.session_state:
+    st.session_state.fre_filename = None
+if 'analysis_completed' not in st.session_state:
+    st.session_state.analysis_completed = False
+
+# CSS customizado para design limpo
+st.markdown("""
+<style>
+    .main-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 10px;
+        border-left: 5px solid #3b82f6;
+    }
+    
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 1.5rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .info-box {
+        background-color: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .warning-box {
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .success-box {
+        background-color: #f0fdf4;
+        border: 1px solid #22c55e;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-left: 4px solid #3b82f6;
+        margin: 0.5rem 0;
+    }
+    
+    .stButton > button {
+        background-color: #3b82f6;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        padding: 0.5rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .stButton > button:hover {
+        background-color: #2563eb;
+        transform: translateY(-2px);
+    }
+</style>
+""", unsafe_allow_html=True)
+
 class FREAnalyzer:
     def __init__(self, api_key):
         openai.api_key = api_key
@@ -301,96 +391,6 @@ class FREAnalyzer:
         return buffer
 
 def main():
-    # Configuração da página
-    st.set_page_config(
-        page_title="Analisador FRE vs Normas CVM",
-        page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-
-    # Inicializar session state
-    if 'analysis_results' not in st.session_state:
-        st.session_state.analysis_results = None
-    if 'fre_filename' not in st.session_state:
-        st.session_state.fre_filename = None
-    if 'analysis_completed' not in st.session_state:
-        st.session_state.analysis_completed = False
-
-    # CSS customizado para design limpo
-    st.markdown("""
-    <style>
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1f2937;
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 1rem;
-            background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%);
-            border-radius: 10px;
-            border-left: 5px solid #3b82f6;
-        }
-        
-        .section-header {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #374151;
-            margin: 1.5rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .info-box {
-            background-color: #f0f9ff;
-            border: 1px solid #0ea5e9;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        
-        .warning-box {
-            background-color: #fef3c7;
-            border: 1px solid #f59e0b;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        
-        .success-box {
-            background-color: #f0fdf4;
-            border: 1px solid #22c55e;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        
-        .metric-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid #3b82f6;
-            margin: 0.5rem 0;
-        }
-        
-        .stButton > button {
-            background-color: #3b82f6;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 0.5rem 2rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .stButton > button:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
     # Header principal
     st.markdown('<div class="main-header">📊 Analisador FRE vs Normas CVM</div>', unsafe_allow_html=True)
     
