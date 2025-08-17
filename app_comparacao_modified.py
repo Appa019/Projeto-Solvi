@@ -25,6 +25,231 @@ try:
 except ImportError:
     DOCX_AVAILABLE = False
 
+# Configuração da página
+st.set_page_config(
+    page_title="Comparador de PDFs - Solvi",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# CSS customizado para destacar filtros e parágrafos
+st.markdown("""
+<style>
+    /* Estilo para o header com logo */
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        padding: 20px 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-text {
+        color: white;
+        flex: 1;
+    }
+    
+    .header-title {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin: 0;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .header-subtitle {
+        font-size: 1.1em;
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .logo-container {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logo-container img {
+        max-height: 60px;
+        max-width: 150px;
+        object-fit: contain;
+    }
+    
+    /* Estilo para filtros em destaque */
+    .filtros-container {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filtros-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .filtros-content {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Estilo para métricas */
+    .metric-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .metric-value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    /* Estilo para parágrafos */
+    .paragrafo-container {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin: 15px 0;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .paragrafo-header {
+        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        color: white;
+        padding: 12px 20px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .paragrafo-content {
+        padding: 20px;
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 14px;
+        line-height: 1.8;
+        background: #fafafa;
+    }
+    
+    .paragrafo-numero {
+        display: inline-block;
+        width: 60px;
+        color: #666;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        margin-right: 15px;
+        text-align: right;
+    }
+    
+    .paragrafo-texto {
+        display: inline;
+    }
+    
+    .paragrafo-adicionado {
+        background-color: #e8f5e8;
+        border-left: 4px solid #4caf50;
+        color: #2e7d32;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 4px;
+    }
+    
+    .paragrafo-removido {
+        background-color: #ffebee;
+        border-left: 4px solid #f44336;
+        color: #c62828;
+        text-decoration: line-through;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 4px;
+    }
+    
+    .paragrafo-modificado {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #856404;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 4px;
+    }
+    
+    .paragrafo-normal {
+        background-color: #f9f9f9;
+        border-left: 4px solid #e0e0e0;
+        color: #555;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 4px;
+    }
+    
+    .filtro-info {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 6px;
+        padding: 10px 15px;
+        margin: 10px 0;
+        color: #1976d2;
+        font-size: 0.9em;
+    }
+    
+    .algoritmo-info {
+        background: #f3e5f5;
+        border: 1px solid #9c27b0;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 15px 0;
+        color: #7b1fa2;
+        font-size: 0.9em;
+    }
+    
+    /* Responsividade para mobile */
+    @media (max-width: 768px) {
+        .header-container {
+            flex-direction: column;
+            text-align: center;
+            gap: 20px;
+        }
+        
+        .header-title {
+            font-size: 2em;
+        }
+        
+        .logo-container {
+            order: -1;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -521,231 +746,6 @@ def exibir_diferencas_por_paragrafos(diferencas_detalhadas: List[Dict], tipos_fi
 def main():
     """Função principal da aplicação"""
     
-    # Configuração da página
-    st.set_page_config(
-        page_title="Comparador de PDFs - Solvi",
-        page_icon="📚",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-
-    # CSS customizado para destacar filtros e parágrafos
-    st.markdown("""
-    <style>
-        /* Estilo para o header com logo */
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-            padding: 20px 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header-text {
-            color: white;
-            flex: 1;
-        }
-        
-        .header-title {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin: 0;
-            background: linear-gradient(45deg, #ffffff, #e0e7ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .header-subtitle {
-            font-size: 1.1em;
-            margin: 5px 0 0 0;
-            opacity: 0.9;
-        }
-        
-        .logo-container {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .logo-container img {
-            max-height: 60px;
-            max-width: 150px;
-            object-fit: contain;
-        }
-        
-        /* Estilo para filtros em destaque */
-        .filtros-container {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .filtros-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .filtros-content {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-        }
-        
-        /* Estilo para métricas */
-        .metric-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .metric-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-        
-        .metric-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        
-        /* Estilo para parágrafos */
-        .paragrafo-container {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin: 15px 0;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .paragrafo-header {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            color: white;
-            padding: 12px 20px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .paragrafo-content {
-            padding: 20px;
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 14px;
-            line-height: 1.8;
-            background: #fafafa;
-        }
-        
-        .paragrafo-numero {
-            display: inline-block;
-            width: 60px;
-            color: #666;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            margin-right: 15px;
-            text-align: right;
-        }
-        
-        .paragrafo-texto {
-            display: inline;
-        }
-        
-        .paragrafo-adicionado {
-            background-color: #e8f5e8;
-            border-left: 4px solid #4caf50;
-            color: #2e7d32;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-        
-        .paragrafo-removido {
-            background-color: #ffebee;
-            border-left: 4px solid #f44336;
-            color: #c62828;
-            text-decoration: line-through;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-        
-        .paragrafo-modificado {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            color: #856404;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-        
-        .paragrafo-normal {
-            background-color: #f9f9f9;
-            border-left: 4px solid #e0e0e0;
-            color: #555;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-        
-        .filtro-info {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 6px;
-            padding: 10px 15px;
-            margin: 10px 0;
-            color: #1976d2;
-            font-size: 0.9em;
-        }
-        
-        .algoritmo-info {
-            background: #f3e5f5;
-            border: 1px solid #9c27b0;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 15px 0;
-            color: #7b1fa2;
-            font-size: 0.9em;
-        }
-        
-        /* Responsividade para mobile */
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: column;
-                text-align: center;
-                gap: 20px;
-            }
-            
-            .header-title {
-                font-size: 2em;
-            }
-            
-            .logo-container {
-                order: -1;
-            }
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
     # Título e descrição
     st.title("📚 Comparador de PDFs - Solvi")
     st.markdown("**Compare dois documentos (PDF ou Word) e identifique apenas as alterações.**")
@@ -786,9 +786,7 @@ def main():
     if 'comparador' not in st.session_state:
         st.session_state.comparador = DocumentComparator()
     
-    # Upload de arquivos
-    st.subheader("📁 Upload dos Documentos")
-    
+    # Layout em colunas para upload
     col1, col2 = st.columns(2)
     
     with col1:
