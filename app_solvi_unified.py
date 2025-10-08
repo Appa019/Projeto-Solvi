@@ -1,6 +1,6 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
-Versão Masterpiece - Bizarramente parecida com o site oficial da Solví
+Versão Masterpiece com Sidebar Corrigido - Bizarramente parecida com o site oficial da Solví
 Aplicação premium que combina análise CVM e comparação de documentos
 """
 
@@ -29,7 +29,7 @@ from pathlib import Path
 import tempfile
 import os
 
-# Configuração da página com tema Solví
+# Configuração da página com tema Solví - SIDEBAR SEMPRE EXPANDIDA
 st.set_page_config(
     page_title="Plataforma Solví - Soluções Inteligentes",
     page_icon="🌱",
@@ -42,7 +42,7 @@ st.set_page_config(
     }
 )
 
-# CSS Premium Masterpiece - Bizarramente parecido com Solví
+# CSS Premium Masterpiece - Bizarramente parecido com Solví + SIDEBAR CORRIGIDO
 st.markdown("""
 <style>
     /* Importar fontes oficiais */
@@ -56,12 +56,51 @@ st.markdown("""
         padding: 0;
     }
     
+    /* CORREÇÃO PARA HEADER PREENCHER TOPO COMPLETO */
+    .stApp {
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+    }
+    
+    .stApp > header {
+        display: none !important;
+    }
+    
     .main .block-container {
-        padding-top: 0rem;
+        padding-top: 0rem !important;
         padding-bottom: 3rem;
         max-width: 1400px;
         padding-left: 2rem;
         padding-right: 2rem;
+        margin-top: 0rem !important;
+    }
+    
+    /* CORREÇÃO PARA SIDEBAR SEMPRE VISÍVEL */
+    section[data-testid="stSidebar"] {
+        width: 21rem !important;
+        min-width: 21rem !important;
+        display: block !important;
+        visibility: visible !important;
+        background: var(--solvi-gradient-surface) !important;
+        border-right: 3px solid var(--solvi-light-green) !important;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        width: 21rem !important;
+        min-width: 21rem !important;
+        background: var(--solvi-gradient-surface) !important;
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .css-1d391kg {
+        width: 21rem !important;
+        min-width: 21rem !important;
+        background: var(--solvi-gradient-surface) !important;
+    }
+    
+    /* Ocultar botão de toggle da sidebar */
+    button[kind="header"] {
+        display: none !important;
     }
     
     /* Ocultar elementos padrão do Streamlit */
@@ -69,11 +108,6 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {visibility: hidden;}
-    
-    /* Remover padding padrão do Streamlit */
-    .css-18e3th9, .css-1d391kg {
-        padding-top: 0rem;
-    }
     
     /* Paleta de cores oficial Solví - Verde Escuro Dominante */
     :root {
@@ -100,7 +134,8 @@ st.markdown("""
         color: var(--solvi-text-light);
         padding: 3rem 0;
         border-radius: 0;
-        margin: -2rem calc(-50vw + 50%) 3rem calc(-50vw + 50%);
+        margin: -3rem calc(-50vw + 50%) 3rem calc(-50vw + 50%);
+        margin-top: -3rem !important;
         box-shadow: 0 12px 40px var(--solvi-shadow-strong);
         position: relative;
         overflow: hidden;
@@ -680,6 +715,27 @@ st.markdown("""
         box-shadow: 0 12px 35px rgba(0,0,0,0.4);
     }
     
+    /* SIDEBAR PREMIUM STYLING */
+    .sidebar-content {
+        background: var(--solvi-gradient-surface);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 3px solid var(--solvi-background);
+        box-shadow: 0 10px 30px var(--solvi-shadow);
+    }
+    
+    .sidebar-title {
+        color: var(--solvi-primary-green);
+        font-family: 'Poppins', sans-serif;
+        font-weight: 800;
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        border-bottom: 3px solid var(--solvi-light-green);
+        padding-bottom: 1rem;
+    }
+    
     /* Responsividade premium */
     @media (max-width: 768px) {
         .solvi-header {
@@ -730,6 +786,18 @@ st.markdown("""
         .solvi-badge {
             padding: 1.2rem 2.5rem;
             font-size: 1rem;
+        }
+        
+        /* Sidebar responsiva */
+        section[data-testid="stSidebar"] {
+            width: 18rem !important;
+            min-width: 18rem !important;
+        }
+        
+        section[data-testid="stSidebar"] > div {
+            width: 18rem !important;
+            min-width: 18rem !important;
+            padding: 1.5rem 1rem !important;
         }
     }
     
@@ -826,8 +894,6 @@ def init_session_state():
         st.session_state.analysis_results = None
     if 'comparison_results' not in st.session_state:
         st.session_state.comparison_results = None
-    if 'sidebar_expanded' not in st.session_state:
-        st.session_state.sidebar_expanded = True
 
 class FREAnalyzer:
     """Classe premium para análise de FRE vs Normas CVM"""
@@ -1267,20 +1333,19 @@ def render_navigation():
     col1, col2 = st.columns(2)
     
     with col1:
-        # Botão que abre sidebar automaticamente
         if st.button("📊 Análise CVM", key="tab_cvm", use_container_width=True):
             st.session_state.current_tab = 'cvm'
-            st.session_state.sidebar_expanded = True
             st.rerun()
     
     with col2:
         if st.button("📚 Comparação de Documentos", key="tab_comparison", use_container_width=True):
             st.session_state.current_tab = 'comparison'
+            st.rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
 
 def render_cvm_analysis():
-    """Renderiza a interface premium de análise CVM"""
+    """Renderiza a interface premium de análise CVM com SIDEBAR CORRIGIDA"""
     st.markdown("""
     <div class="solvi-card">
         <div class="solvi-card-header">
@@ -1295,9 +1360,10 @@ def render_cvm_analysis():
     </div>
     """, unsafe_allow_html=True)
     
-    # Sidebar premium para configurações
+    # SIDEBAR PREMIUM CORRIGIDA - SEMPRE VISÍVEL
     with st.sidebar:
-        st.markdown("### ⚙️ Configurações Premium")
+        st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
+        st.markdown('<h3 class="sidebar-title">⚙️ Configurações Premium</h3>', unsafe_allow_html=True)
         
         # Campo obrigatório para API Key
         api_key = st.text_input(
@@ -1313,7 +1379,6 @@ def render_cvm_analysis():
                 Configure sua chave para utilizar a análise CVM premium com IA avançada.
             </div>
             """, unsafe_allow_html=True)
-            return
         
         st.markdown("---")
         
@@ -1339,8 +1404,23 @@ def render_cvm_analysis():
         if len(cvm_files) > 5:
             st.error("⚠️ Máximo de 5 documentos CVM permitidos para análise premium!")
             cvm_files = cvm_files[:5]
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Área principal premium
+    if not api_key:
+        st.markdown("""
+        <div class="solvi-upload">
+            <div class="solvi-upload-icon">🔑</div>
+            <div class="solvi-upload-text">Configure sua API Key OpenAI</div>
+            <div class="solvi-upload-subtext">
+                Para utilizar a análise CVM premium, você precisa configurar sua chave API OpenAI na barra lateral.<br>
+                A chave é necessária para processar documentos com inteligência artificial avançada.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        return
+    
     if not fre_file:
         st.markdown("""
         <div class="solvi-upload">
@@ -1759,8 +1839,12 @@ def main():
     # Renderizar conteúdo premium baseado na aba selecionada
     if st.session_state.current_tab == 'cvm':
         render_cvm_analysis()
-    else:
+    elif st.session_state.current_tab == 'comparison':
         render_document_comparison()
+    else:
+        # Fallback para CVM se algo der errado
+        st.session_state.current_tab = 'cvm'
+        render_cvm_analysis()
     
     # Renderizar footer premium
     render_footer()
