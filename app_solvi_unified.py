@@ -84,7 +84,7 @@ st.markdown("""
     .solvi-header {
         background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 30%, var(--solvi-medium-green) 70%, var(--solvi-light-green) 100%);
         color: var(--solvi-text-light);
-        padding: 0rem 0rem;
+        padding: 5rem 5rem;
         border-radius: 0;
         margin: -2rem -2rem 2rem -2rem;
         box-shadow: 0 8px 32px var(--solvi-shadow);
@@ -92,7 +92,7 @@ st.markdown("""
         overflow: hidden;
         min-height: 250
         px;
-        width: 100vw;
+        width: 150vw;
         margin-left: calc(-50vw + 50%);
     }
     
