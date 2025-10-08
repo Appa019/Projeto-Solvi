@@ -90,7 +90,8 @@ st.markdown("""
         box-shadow: 0 8px 32px var(--solvi-shadow);
         position: relative;
         overflow: hidden;
-        min-height: 180px;
+        min-height: 250
+        px;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
     }
