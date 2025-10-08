@@ -1,7 +1,7 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
 Versão Masterpiece com Sidebar Corrigido - Bizarramente parecida com o site oficial da Solví
-Aplicação premium que combina análise CVM e comparação de documentos
+Aplicação  que combina análise CVM e comparação de documentos
 """
 
 import streamlit as st
@@ -42,7 +42,7 @@ st.set_page_config(
     }
 )
 
-# CSS Premium Masterpiece - Bizarramente parecido com Solví + SIDEBAR CORRIGIDO
+# CSS  Masterpiece - Bizarramente parecido com Solví + SIDEBAR CORRIGIDO
 st.markdown("""
 <style>
     /* Importar fontes oficiais */
@@ -194,7 +194,7 @@ st.markdown("""
         flex: 1;
     }
     
-    /* Logo Premium com Background Verde Escuro */
+    /* Logo  com Background Verde Escuro */
     .solvi-logo {
         height: 80px;
         width: auto;
@@ -266,7 +266,7 @@ st.markdown("""
         border-color: rgba(255,255,255,0.4);
     }
     
-    /* Seção de imagens inspiracionais premium */
+    /* Seção de imagens inspiracionais  */
     .solvi-inspiration {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -346,7 +346,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Navegação premium estilo Solví */
+    /* Navegação  estilo Solví */
     .solvi-navigation {
         background: var(--solvi-gradient-surface);
         border-radius: 24px;
@@ -369,7 +369,7 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Cards premium estilo Solví */
+    /* Cards  estilo Solví */
     .solvi-card {
         background: var(--solvi-gradient-surface);
         border-radius: 28px;
@@ -438,7 +438,7 @@ st.markdown("""
         line-height: 1.2;
     }
     
-    /* Métricas premium estilo Solví */
+    /* Métricas  estilo Solví */
     .solvi-metrics {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -498,7 +498,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Botões premium estilo Solví */
+    /* Botões  estilo Solví */
     .stButton > button {
         background: var(--solvi-gradient-primary);
         color: var(--solvi-text-light);
@@ -539,7 +539,7 @@ st.markdown("""
         border-color: var(--solvi-white);
     }
     
-    /* Alertas premium estilo Solví */
+    /* Alertas  estilo Solví */
     .solvi-alert {
         border-radius: 24px;
         padding: 3rem 3.5rem;
@@ -578,7 +578,7 @@ st.markdown("""
         color: #0d47a1;
     }
     
-    /* Upload areas premium com pontilhado contínuo */
+    /* Upload areas  com pontilhado contínuo */
     .solvi-upload {
         border: 5px dashed var(--solvi-light-green);
         border-radius: 28px;
@@ -592,7 +592,7 @@ st.markdown("""
         overflow: hidden;
     }
     
-    /* Pontilhado contínuo animado premium */
+    /* Pontilhado contínuo animado  */
     .solvi-upload::before {
         content: '';
         position: absolute;
@@ -667,7 +667,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Footer premium */
+    /* Footer  */
     .solvi-footer {
         background: var(--solvi-gradient-primary);
         color: var(--solvi-text-light);
@@ -715,7 +715,7 @@ st.markdown("""
         box-shadow: 0 12px 35px rgba(0,0,0,0.4);
     }
     
-    /* SIDEBAR PREMIUM STYLING */
+    /* SIDEBAR  STYLING */
     .sidebar-content {
         background: var(--solvi-gradient-surface);
         border-radius: 20px;
@@ -736,7 +736,7 @@ st.markdown("""
         padding-bottom: 1rem;
     }
     
-    /* Responsividade premium */
+    /* Responsividade  */
     @media (max-width: 768px) {
         .solvi-header {
             padding: 2.5rem 0;
@@ -801,7 +801,7 @@ st.markdown("""
         }
     }
     
-    /* Animações premium */
+    /* Animações  */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -843,7 +843,7 @@ st.markdown("""
         animation: float 6s ease-in-out infinite;
     }
     
-    /* Scrollbar premium personalizada */
+    /* Scrollbar  personalizada */
     ::-webkit-scrollbar {
         width: 14px;
     }
@@ -863,7 +863,7 @@ st.markdown("""
         background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 100%);
     }
     
-    /* Efeitos especiais premium */
+    /* Efeitos especiais  */
     .solvi-glow {
         box-shadow: 0 0 20px var(--solvi-accent-green);
     }
@@ -887,7 +887,7 @@ st.markdown("""
 
 # Inicializar session state
 def init_session_state():
-    """Inicializa o estado da sessão com configurações premium"""
+    """Inicializa o estado da sessão com configurações """
     if 'current_tab' not in st.session_state:
         st.session_state.current_tab = 'cvm'
     if 'analysis_results' not in st.session_state:
@@ -896,14 +896,14 @@ def init_session_state():
         st.session_state.comparison_results = None
 
 class FREAnalyzer:
-    """Classe premium para análise de FRE vs Normas CVM"""
+    """Classe  para análise de FRE vs Normas CVM"""
     
     def __init__(self, api_key):
         openai.api_key = api_key
         self.client = openai.OpenAI(api_key=api_key)
         
     def extract_text_from_pdf(self, pdf_file):
-        """Extrai texto de arquivo PDF com tratamento premium"""
+        """Extrai texto de arquivo PDF com tratamento """
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ""
@@ -915,7 +915,7 @@ class FREAnalyzer:
             return ""
     
     def extract_text_from_docx(self, docx_file):
-        """Extrai texto de arquivo Word com tratamento premium"""
+        """Extrai texto de arquivo Word com tratamento """
         try:
             doc = docx.Document(docx_file)
             text = ""
@@ -941,7 +941,7 @@ class FREAnalyzer:
         """Analisa uma seção específica do FRE contra as normas CVM"""
         
         prompt = f"""
-        Você é um especialista premium em regulamentação CVM e análise de Formulários de Referência (FRE).
+        Você é um especialista  em regulamentação CVM e análise de Formulários de Referência (FRE).
         
         Analise a seção "{section_name}" do FRE fornecido contra as normas e orientações CVM.
         
@@ -1069,7 +1069,7 @@ class FREAnalyzer:
         return sections
 
 class DocumentComparator:
-    """Classe premium para comparação de documentos"""
+    """Classe  para comparação de documentos"""
     
     def __init__(self):
         self.texto_ref = []
@@ -1292,7 +1292,7 @@ def render_header():
     """, unsafe_allow_html=True)
 
 def render_inspiration_section():
-    """Renderiza seção de imagens inspiracionais premium"""
+    """Renderiza seção de imagens inspiracionais """
     st.markdown("""
     <div class="solvi-inspiration">
         <div class="solvi-inspiration-item">
@@ -1327,7 +1327,7 @@ def render_inspiration_section():
     """, unsafe_allow_html=True)
 
 def render_navigation():
-    """Renderiza a navegação premium por abas"""
+    """Renderiza a navegação  por abas"""
     st.markdown('<div class="solvi-navigation">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -1345,7 +1345,7 @@ def render_navigation():
     st.markdown("</div>", unsafe_allow_html=True)
 
 def render_cvm_analysis():
-    """Renderiza a interface premium de análise CVM com SIDEBAR CORRIGIDA"""
+    """Renderiza a interface  de análise CVM com SIDEBAR CORRIGIDA"""
     st.markdown("""
     <div class="solvi-card">
         <div class="solvi-card-header">
@@ -1353,30 +1353,30 @@ def render_cvm_analysis():
             <h2 class="solvi-card-title">Análise FRE vs Normas CVM</h2>
         </div>
         <p style="color: #666; font-size: 1.4rem; line-height: 1.8; font-weight: 500; font-family: 'Inter', sans-serif;">
-            Análise automatizada premium de Formulários de Referência contra normas CVM com identificação 
+            Análise automatizada  de Formulários de Referência contra normas CVM com identificação 
             inteligente de não conformidades e geração de relatórios detalhados com base legal específica 
             e recomendações de melhoria personalizadas.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # SIDEBAR PREMIUM CORRIGIDA - SEMPRE VISÍVEL
+    # SIDEBAR  CORRIGIDA - SEMPRE VISÍVEL
     with st.sidebar:
         st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
-        st.markdown('<h3 class="sidebar-title">⚙️ Configurações Premium</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="sidebar-title">⚙️ Configurações </h3>', unsafe_allow_html=True)
         
         # Campo obrigatório para API Key
         api_key = st.text_input(
             "🔑 Chave API OpenAI *",
             type="password",
-            help="Insira sua chave API da OpenAI (obrigatório para análise premium)"
+            help="Insira sua chave API da OpenAI (obrigatório para análise )"
         )
         
         if not api_key:
             st.markdown("""
             <div class="solvi-alert error">
                 ⚠️ <strong>Chave API OpenAI é obrigatória!</strong><br>
-                Configure sua chave para utilizar a análise CVM premium com IA avançada.
+                Configure sua chave para utilizar a análise CVM  com IA avançada.
             </div>
             """, unsafe_allow_html=True)
         
@@ -1387,7 +1387,7 @@ def render_cvm_analysis():
         fre_file = st.file_uploader(
             "Upload do Formulário de Referência",
             type=['pdf', 'docx'],
-            help="Faça upload do FRE para análise premium"
+            help="Faça upload do FRE para análise "
         )
         
         st.markdown("---")
@@ -1402,19 +1402,19 @@ def render_cvm_analysis():
         )
         
         if len(cvm_files) > 5:
-            st.error("⚠️ Máximo de 5 documentos CVM permitidos para análise premium!")
+            st.error("⚠️ Máximo de 5 documentos CVM permitidos para análise !")
             cvm_files = cvm_files[:5]
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Área principal premium
+    # Área principal 
     if not api_key:
         st.markdown("""
         <div class="solvi-upload">
             <div class="solvi-upload-icon">🔑</div>
             <div class="solvi-upload-text">Configure sua API Key OpenAI</div>
             <div class="solvi-upload-subtext">
-                Para utilizar a análise CVM premium, você precisa configurar sua chave API OpenAI na barra lateral.<br>
+                Para utilizar a análise CVM , você precisa configurar sua chave API OpenAI na barra lateral.<br>
                 A chave é necessária para processar documentos com inteligência artificial avançada.
             </div>
         </div>
@@ -1425,12 +1425,12 @@ def render_cvm_analysis():
         st.markdown("""
         <div class="solvi-upload">
             <div class="solvi-upload-icon">📄</div>
-            <div class="solvi-upload-text">Como usar a Análise CVM Premium</div>
+            <div class="solvi-upload-text">Como usar a Análise CVM </div>
             <div class="solvi-upload-subtext">
                 1. Configure sua API Key OpenAI na barra lateral<br>
                 2. Faça upload do FRE (Formulário de Referência)<br>
                 3. Adicione documentos CVM para comparação avançada<br>
-                4. Execute a análise premium e receba relatório detalhado<br>
+                4. Execute a análise  e receba relatório detalhado<br>
                 5. Baixe relatórios em PDF com recomendações personalizadas
             </div>
         </div>
@@ -1440,13 +1440,13 @@ def render_cvm_analysis():
     if not cvm_files:
         st.markdown("""
         <div class="solvi-alert warning">
-            ⚠️ <strong>Documentos CVM necessários para análise premium</strong><br>
+            ⚠️ <strong>Documentos CVM necessários para análise </strong><br>
             Adicione pelo menos um documento CVM para realizar a análise comparativa avançada com IA.
         </div>
         """, unsafe_allow_html=True)
         return
     
-    # Informações premium dos arquivos carregados
+    # Informações  dos arquivos carregados
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1454,7 +1454,7 @@ def render_cvm_analysis():
         <div class="solvi-alert success">
             ✅ <strong>FRE Carregado:</strong> {fre_file.name}<br>
             📊 <strong>Tamanho:</strong> {fre_file.size / 1024 / 1024:.2f} MB<br>
-            🎯 <strong>Status:</strong> Pronto para análise premium
+            🎯 <strong>Status:</strong> Pronto para análise 
         </div>
         """, unsafe_allow_html=True)
     
@@ -1467,11 +1467,11 @@ def render_cvm_analysis():
         </div>
         """, unsafe_allow_html=True)
     
-    # Botão de análise premium
-    if st.button("🔍 Iniciar Análise CVM Premium", type="primary", use_container_width=True):
-        with st.spinner("🔄 Processando análise premium com IA..."):
+    # Botão de análise 
+    if st.button("🔍 Iniciar Análise CVM ", type="primary", use_container_width=True):
+        with st.spinner("🔄 Processando análise  com IA..."):
             try:
-                # Inicializar analisador premium
+                # Inicializar analisador 
                 analyzer = FREAnalyzer(api_key)
                 
                 # Extrair texto do FRE
@@ -1497,7 +1497,7 @@ def render_cvm_analysis():
                     st.error("❌ Não foi possível identificar seções no FRE")
                     return
                 
-                # Analisar cada seção com IA premium
+                # Analisar cada seção com IA 
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
@@ -1517,31 +1517,31 @@ def render_cvm_analysis():
                     progress_bar.progress((i + 1) / total_sections)
                     time.sleep(0.5)
                 
-                status_text.text("✅ Análise premium concluída com sucesso!")
+                status_text.text("✅ Análise  concluída com sucesso!")
                 progress_bar.empty()
                 status_text.empty()
                 
-                # Salvar resultados premium
+                # Salvar resultados 
                 st.session_state.analysis_results = analysis_results
                 st.session_state.fre_filename = fre_file.name
                 
                 st.markdown("""
                 <div class="solvi-alert success">
-                    ✅ <strong>Análise CVM Premium concluída com sucesso!</strong><br>
+                    ✅ <strong>Análise CVM  concluída com sucesso!</strong><br>
                     Confira os resultados detalhados e insights avançados abaixo.
                 </div>
                 """, unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error(f"❌ Erro durante a análise premium: {str(e)}")
+                st.error(f"❌ Erro durante a análise : {str(e)}")
     
-    # Exibir resultados premium se disponíveis
+    # Exibir resultados  se disponíveis
     if st.session_state.analysis_results:
         analysis_results = st.session_state.analysis_results
         
-        st.markdown("### 📊 Resultados da Análise Premium")
+        st.markdown("### 📊 Resultados da Análise ")
         
-        # Métricas premium
+        # Métricas 
         total_pontos = sum(len(r.get('pontos_atencao', [])) for r in analysis_results)
         criticos = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'CRITICO')
         atencao = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'ATENCAO')
@@ -1568,7 +1568,7 @@ def render_cvm_analysis():
         </div>
         """, unsafe_allow_html=True)
         
-        # Exibir resultados detalhados premium
+        # Exibir resultados detalhados 
         for result in analysis_results:
             with st.expander(f"📑 {result.get('secao', 'Seção não identificada')}", expanded=False):
                 conformidade = result.get('conformidade', 'N/A')
@@ -1594,7 +1594,7 @@ def render_cvm_analysis():
                         st.write("---")
 
 def render_document_comparison():
-    """Renderiza a interface premium de comparação de documentos"""
+    """Renderiza a interface  de comparação de documentos"""
     st.markdown("""
     <div class="solvi-card">
         <div class="solvi-card-header">
@@ -1602,14 +1602,14 @@ def render_document_comparison():
             <h2 class="solvi-card-title">Comparação Inteligente de Documentos</h2>
         </div>
         <p style="color: #666; font-size: 1.4rem; line-height: 1.8; font-weight: 500; font-family: 'Inter', sans-serif;">
-            Compare dois documentos (PDF ou Word) com algoritmo premium de IA e identifique apenas as alterações 
+            Compare dois documentos (PDF ou Word) com algoritmo  de IA e identifique apenas as alterações 
             reais de conteúdo, ignorando mudanças de formatação e posicionamento com normalização avançada 
             e análise semântica inteligente.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Layout premium em colunas para upload
+    # Layout  em colunas para upload
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1618,7 +1618,7 @@ def render_document_comparison():
             "Escolha o arquivo de referência",
             type=['pdf', 'docx'],
             key="ref_uploader",
-            help="Este será usado como base para comparação premium"
+            help="Este será usado como base para comparação "
         )
         
         if arquivo_ref:
@@ -1627,7 +1627,7 @@ def render_document_comparison():
                 ✅ <strong>Arquivo carregado:</strong> {arquivo_ref.name}<br>
                 📊 <strong>Tamanho:</strong> {arquivo_ref.size / 1024 / 1024:.2f} MB<br>
                 📋 <strong>Tipo:</strong> {arquivo_ref.type.split('/')[-1].upper()}<br>
-                🎯 <strong>Status:</strong> Pronto para análise premium
+                🎯 <strong>Status:</strong> Pronto para análise 
             </div>
             """, unsafe_allow_html=True)
     
@@ -1650,7 +1650,7 @@ def render_document_comparison():
             </div>
             """, unsafe_allow_html=True)
     
-    # Informações premium sobre o algoritmo com pontilhado contínuo
+    # Informações  sobre o algoritmo com pontilhado contínuo
     if not arquivo_ref or not arquivo_novo:
         st.markdown("""
         <div class="solvi-upload">
@@ -1662,12 +1662,12 @@ def render_document_comparison():
                 ✅ Detecta modificações com alta precisão e IA<br>
                 ✅ Normaliza texto para comparação precisa<br>
                 ✅ Análise por similaridade semântica avançada<br>
-                ✅ Relatórios detalhados com insights premium
+                ✅ Relatórios detalhados com insights 
             </div>
         </div>
         """, unsafe_allow_html=True)
     
-    # Botão de comparação premium
+    # Botão de comparação 
     if arquivo_ref and arquivo_novo:
         # Verificar compatibilidade de tipos
         comparator = DocumentComparator()
@@ -1678,14 +1678,14 @@ def render_document_comparison():
             st.markdown(f"""
             <div class="solvi-alert warning">
                 ⚠️ <strong>Tipos diferentes detectados:</strong> {tipo_ref.upper()} vs {tipo_novo.upper()}<br>
-                A comparação premium ainda é possível com algoritmo adaptativo, mas pode não ser ideal.
+                A comparação  ainda é possível com algoritmo adaptativo, mas pode não ser ideal.
             </div>
             """, unsafe_allow_html=True)
         
-        if st.button("🔍 Comparar Documentos Premium", type="primary", use_container_width=True):
-            with st.spinner("🔄 Processando comparação premium com IA..."):
+        if st.button("🔍 Comparar Documentos ", type="primary", use_container_width=True):
+            with st.spinner("🔄 Processando comparação  com IA..."):
                 try:
-                    # Extrair textos premium
+                    # Extrair textos 
                     ref_bytes = arquivo_ref.read()
                     novo_bytes = arquivo_novo.read()
                     
@@ -1703,7 +1703,7 @@ def render_document_comparison():
                         st.error("❌ Erro ao extrair texto dos documentos")
                         return
                     
-                    # Comparar textos com algoritmo premium
+                    # Comparar textos com algoritmo 
                     diferencas_simples = []
                     
                     max_paginas = max(len(texto_ref), len(texto_novo))
@@ -1742,7 +1742,7 @@ def render_document_comparison():
                     progress_bar.empty()
                     status_text.empty()
                     
-                    # Salvar resultados premium
+                    # Salvar resultados 
                     st.session_state.comparison_results = {
                         'diferencas': diferencas_simples,
                         'arquivo_ref': arquivo_ref.name,
@@ -1751,22 +1751,22 @@ def render_document_comparison():
                     
                     st.markdown("""
                     <div class="solvi-alert success">
-                        ✅ <strong>Comparação premium concluída com sucesso!</strong><br>
+                        ✅ <strong>Comparação  concluída com sucesso!</strong><br>
                         Confira os resultados detalhados e insights avançados abaixo.
                     </div>
                     """, unsafe_allow_html=True)
                     
                 except Exception as e:
-                    st.error(f"❌ Erro durante a comparação premium: {str(e)}")
+                    st.error(f"❌ Erro durante a comparação : {str(e)}")
     
-    # Exibir resultados premium se disponíveis
+    # Exibir resultados  se disponíveis
     if st.session_state.comparison_results:
         results = st.session_state.comparison_results
         diferencas = results['diferencas']
         
-        st.markdown("### 📊 Resultados da Comparação Premium")
+        st.markdown("### 📊 Resultados da Comparação ")
         
-        # Métricas premium
+        # Métricas 
         total_diferencas = len(diferencas)
         adicionados = len([d for d in diferencas if d['tipo'] == 'Adicionado'])
         removidos = len([d for d in diferencas if d['tipo'] == 'Removido'])
@@ -1793,30 +1793,30 @@ def render_document_comparison():
         </div>
         """, unsafe_allow_html=True)
         
-        # Tabela premium de diferenças
+        # Tabela  de diferenças
         if diferencas:
-            st.markdown("### 📋 Detalhes das Alterações Premium")
+            st.markdown("### 📋 Detalhes das Alterações ")
             df = pd.DataFrame(diferencas)
             st.dataframe(df, use_container_width=True)
         else:
             st.markdown("""
             <div class="solvi-alert success">
                 ✅ <strong>Nenhuma diferença encontrada!</strong><br>
-                Os documentos são idênticos em conteúdo após análise premium com IA.
+                Os documentos são idênticos em conteúdo após análise  com IA.
             </div>
             """, unsafe_allow_html=True)
 
 def render_footer():
-    """Renderiza o footer premium da aplicação"""
+    """Renderiza o footer  da aplicação"""
     st.markdown("""
     <div class="solvi-footer">
         <div class="solvi-footer-content">
             <img src="https://static.wixstatic.com/media/b5b170_1e07cf7f7f82492a9808f9ae7f038596~mv2.png/v1/crop/x_0,y_0,w_2742,h_1106/fill/w_92,h_37,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/Logotipo%20Solv%C3%AD_edited_edited.png" alt="Solví Logo" class="solvi-footer-logo">
             <p style="margin: 3rem 0 1.5rem 0; font-size: 1.6rem; font-weight: 800; font-family: 'Poppins', sans-serif;">
-                🌱 Plataforma Solví - Soluções Inteligentes Premium para Análise de Documentos
+                🌱 Plataforma Solví - Soluções Inteligentes  para Análise de Documentos
             </p>
             <p style="margin: 0; opacity: 0.95; font-size: 1.2rem; font-weight: 600; font-family: 'Inter', sans-serif;">
-                Desenvolvido com ❤️ para sustentabilidade e inovação • Soluções para a vida • Tecnologia Premium
+                Desenvolvido com ❤️ para sustentabilidade e inovação • Soluções para a vida • Tecnologia 
             </p>
         </div>
     </div>
@@ -1824,19 +1824,19 @@ def render_footer():
 
 def main():
     """Função principal masterpiece da aplicação"""
-    # Inicializar session state premium
+    # Inicializar session state 
     init_session_state()
     
     # Renderizar header masterpiece
     render_header()
     
-    # Renderizar seção inspiracional premium
+    # Renderizar seção inspiracional 
     render_inspiration_section()
     
-    # Renderizar navegação premium
+    # Renderizar navegação 
     render_navigation()
     
-    # Renderizar conteúdo premium baseado na aba selecionada
+    # Renderizar conteúdo  baseado na aba selecionada
     if st.session_state.current_tab == 'cvm':
         render_cvm_analysis()
     elif st.session_state.current_tab == 'comparison':
@@ -1846,7 +1846,7 @@ def main():
         st.session_state.current_tab = 'cvm'
         render_cvm_analysis()
     
-    # Renderizar footer premium
+    # Renderizar footer 
     render_footer()
 
 if __name__ == "__main__":
