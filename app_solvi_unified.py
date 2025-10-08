@@ -1,7 +1,7 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
 Aplicação unificada que combina análise CVM e comparação de documentos
-com design fiel ao site oficial da Solví - Versão Corrigida
+com design fiel ao site oficial da Solví - Versão Final Corrigida
 """
 
 import streamlit as st
@@ -37,7 +37,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado baseado no design oficial da Solví com header expandido
+# CSS customizado baseado no design oficial da Solví com correções específicas
 st.markdown("""
 <style>
     /* Importar fontes Google */
@@ -128,19 +128,23 @@ st.markdown("""
         gap: 2rem;
     }
     
+    /* CORREÇÃO: Logo com background verde escuro Solví */
     .solvi-logo {
         height: 70px;
         width: auto;
-        background: var(--solvi-white);
+        background: var(--solvi-dark-green);
         padding: 12px 20px;
         border-radius: 12px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         transition: all 0.3s ease;
+        border: 3px solid var(--solvi-primary-green);
     }
     
     .solvi-logo:hover {
         transform: scale(1.05);
         box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        background: var(--solvi-primary-green);
+        border-color: var(--solvi-medium-green);
     }
     
     .solvi-title {
@@ -463,7 +467,7 @@ st.markdown("""
         color: #0d47a1;
     }
     
-    /* Upload areas */
+    /* CORREÇÃO: Upload areas com pontilhado contínuo */
     .solvi-upload {
         border: 4px dashed var(--solvi-light-green);
         border-radius: 24px;
@@ -473,6 +477,30 @@ st.markdown("""
         transition: all 0.3s ease;
         margin: 2.5rem 0;
         box-shadow: 0 10px 35px var(--solvi-shadow);
+        position: relative;
+    }
+    
+    /* Pontilhado contínuo animado */
+    .solvi-upload::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border: 4px dashed var(--solvi-primary-green);
+        border-radius: 24px;
+        animation: dash 20s linear infinite;
+        opacity: 0.6;
+    }
+    
+    @keyframes dash {
+        0% {
+            stroke-dashoffset: 0;
+        }
+        100% {
+            stroke-dashoffset: 40px;
+        }
     }
     
     .solvi-upload:hover {
@@ -482,11 +510,18 @@ st.markdown("""
         box-shadow: 0 15px 50px var(--solvi-shadow);
     }
     
+    .solvi-upload:hover::before {
+        border-color: var(--solvi-dark-green);
+        opacity: 0.8;
+    }
+    
     .solvi-upload-icon {
         font-size: 4.5rem;
         color: var(--solvi-light-green);
         margin-bottom: 2rem;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 1;
     }
     
     .solvi-upload-text {
@@ -495,6 +530,8 @@ st.markdown("""
         color: var(--solvi-text-dark);
         margin-bottom: 1.25rem;
         font-family: 'Inter', sans-serif;
+        position: relative;
+        z-index: 1;
     }
     
     .solvi-upload-subtext {
@@ -502,6 +539,8 @@ st.markdown("""
         color: #666;
         line-height: 1.7;
         font-weight: 500;
+        position: relative;
+        z-index: 1;
     }
     
     /* Footer */
@@ -539,10 +578,11 @@ st.markdown("""
     .solvi-footer-logo {
         height: 60px;
         margin-bottom: 2rem;
-        background: var(--solvi-white);
+        background: var(--solvi-dark-green);
         padding: 12px 20px;
         border-radius: 12px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        border: 3px solid var(--solvi-primary-green);
     }
     
     /* Responsividade */
@@ -1092,8 +1132,11 @@ def render_navigation():
     col1, col2 = st.columns(2)
     
     with col1:
+        # CORREÇÃO: Botão que abre sidebar automaticamente
         if st.button("📊 Análise CVM", key="tab_cvm", use_container_width=True):
             st.session_state.current_tab = 'cvm'
+            # Força a abertura da sidebar
+            st.rerun()
     
     with col2:
         if st.button("📚 Comparação de Documentos", key="tab_comparison", use_container_width=True):
@@ -1385,7 +1428,7 @@ def render_document_comparison():
             </div>
             """, unsafe_allow_html=True)
     
-    # Informações sobre o algoritmo
+    # CORREÇÃO: Informações sobre o algoritmo com pontilhado contínuo
     if not arquivo_ref or not arquivo_novo:
         st.markdown("""
         <div class="solvi-upload">
