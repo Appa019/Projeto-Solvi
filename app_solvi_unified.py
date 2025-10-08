@@ -62,7 +62,6 @@ st.markdown("""
         max-width: 1400px;
         padding-left: 2rem;
         padding-right: 2rem;
-        margin-top: 0rem;
     }
     
     /* Ocultar elementos padrão do Streamlit */
@@ -108,9 +107,6 @@ st.markdown("""
         min-height: 200px;
         width: 100vw;
         z-index: 10;
-    }
-
-
     }
     
     .solvi-header::before {
