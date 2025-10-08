@@ -84,7 +84,7 @@ st.markdown("""
     .solvi-header {
         background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 30%, var(--solvi-medium-green) 70%, var(--solvi-light-green) 100%);
         color: var(--solvi-text-light);
-        padding: 2.5rem 2.5rem;
+        padding: 0rem 0rem;
         border-radius: 0;
         margin: -2rem -2rem 2rem -2rem;
         box-shadow: 0 8px 32px var(--solvi-shadow);
@@ -1133,7 +1133,7 @@ def render_navigation():
     col1, col2 = st.columns(2)
     
     with col1:
-        # CORREÇÃO: Botão que abre sidebar automaticamente
+        # CORREÇÃO: Botão que abre bar automaticamente
         if st.button("📊 Análise CVM", key="tab_cvm", use_container_width=True):
             st.session_state.current_tab = 'cvm'
             # Força a abertura da sidebar
