@@ -1,6 +1,6 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
-Versão Profissional • Design institucional + funcionalidades completas
+Versão revisada — layout corrigido e visual institucional idêntico ao site oficial
 """
 
 import streamlit as st
@@ -8,16 +8,10 @@ import pandas as pd
 import openai
 import PyPDF2
 import docx
-import fitz
-import tempfile
-import os
+import difflib
+import re
 import json
 import time
-import re
-from pathlib import Path
-from datetime import datetime
-import difflib
-
 
 # ======================================================
 # 🔧 CONFIGURAÇÃO DA PÁGINA
@@ -29,399 +23,273 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-
 # ======================================================
-# 🎨 CSS PROFISSIONAL - ESTILO INSTITUCIONAL SOLVÍ
+# 🎨 CSS FINAL - INSTITUCIONAL SOLVÍ
 # ======================================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
     :root {
-        --solvi-dark: #0b3d1a;
-        --solvi-primary: #194D33;
-        --solvi-medium: #236E45;
-        --solvi-light: #2E8B57;
-        --solvi-accent: #4CAF50;
-        --solvi-bg: #f7faf7;
-        --solvi-surface: #ffffff;
-        --solvi-text-dark: #143b24;
-        --solvi-shadow: rgba(0,0,0,0.1);
+        --solvi-green-dark: #1c3b28;
+        --solvi-green: #236e45;
+        --solvi-green-light: #2e8b57;
+        --solvi-gray-bg: #f7faf7;
+        --solvi-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 
     body, .main, .block-container {
         font-family: 'Inter', sans-serif !important;
-        background-color: var(--solvi-bg);
-        color: var(--solvi-text-dark);
+        background-color: var(--solvi-gray-bg);
+        color: #1d3425;
     }
-
     #MainMenu, footer, header {visibility: hidden;}
-    .main .block-container {padding-top: 1.5rem; max-width: 1400px;}
 
+    /* === HEADER === */
     .solvi-header {
-        background: linear-gradient(165deg, rgba(25,77,51,0.96) 0%, rgba(46,125,50,0.93) 100%);
+        background: linear-gradient(145deg, var(--solvi-green-dark), var(--solvi-green));
+        padding: 3rem 2rem;
+        border-radius: 16px;
         color: white;
-        padding: 4.5rem 3rem;
-        border-radius: 0;
-        margin: -2rem -2rem 2rem -2rem;
-        box-shadow: 0 10px 40px var(--solvi-shadow);
-        position: relative;
-        overflow: hidden;
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
+        box-shadow: var(--solvi-shadow);
+        margin-bottom: 2rem;
     }
-    .solvi-header::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-        opacity: 0.15;
-        z-index: 0;
-        filter: brightness(0.7);
-    }
-    .solvi-header-content {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 2rem;
-        max-width: 1300px;
-        margin: 0 auto;
-    }
-    .solvi-logo {
-        height: 70px;
-        padding: 10px 20px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.1);
-        border: 2px solid rgba(255,255,255,0.2);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-    }
-    .solvi-title {
-        font-size: 3rem;
+    .solvi-header h1 {
+        font-size: 2.5rem;
         font-weight: 800;
-        margin: 0;
-        letter-spacing: -1px;
+        margin-bottom: 0.5rem;
     }
-    .solvi-subtitle {font-size: 1.2rem; opacity: 0.9; margin-top: 0.5rem;}
-    .solvi-badge {
-        background: rgba(255,255,255,0.15);
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        border: 2px solid rgba(255,255,255,0.3);
+    .solvi-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
     }
 
-    .solvi-navigation {
+    /* === NAVEGAÇÃO === */
+    .solvi-nav {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1.5rem 0 2rem;
+        flex-wrap: wrap;
+    }
+    .solvi-nav button {
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--solvi-green-dark);
+        font-weight: 600;
+        box-shadow: var(--solvi-shadow);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .solvi-nav button:hover {
+        background: var(--solvi-green);
+        color: white;
+    }
+    .solvi-nav .active {
+        background: var(--solvi-green);
+        color: white;
+    }
+
+    /* === BLOCO PADRÃO === */
+    .solvi-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--solvi-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .solvi-card h2 {
+        color: var(--solvi-green-dark);
+        font-weight: 700;
+    }
+
+    /* === UPLOAD === */
+    .solvi-upload {
+        border: 2px dashed var(--solvi-green-light);
+        border-radius: 12px;
+        background: #f9fef9;
+        text-align: center;
+        padding: 2rem;
+        color: var(--solvi-green-dark);
+        font-weight: 500;
+    }
+
+    /* === MÉTRICAS === */
+    .solvi-metrics {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
-        background: var(--solvi-surface);
-        border-bottom: 3px solid var(--solvi-light);
-        padding: 0.8rem 1rem;
-        margin-bottom: 2rem;
-        gap: 1rem;
-        box-shadow: 0 5px 20px var(--solvi-shadow);
-    }
-    .solvi-nav-button {
-        background: transparent;
-        color: var(--solvi-primary);
-        border: none;
-        font-weight: 700;
-        font-size: 1rem;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        transition: 0.3s;
-    }
-    .solvi-nav-button:hover {background: var(--solvi-light); color: white; transform: translateY(-2px);}
-    .solvi-nav-button.active {background: var(--solvi-primary); color: white; box-shadow: 0 4px 15px var(--solvi-shadow);}
-
-    .solvi-card {
-        background: var(--solvi-surface);
-        border-radius: 20px;
-        padding: 2.5rem;
-        margin: 2rem 0;
-        box-shadow: 0 10px 40px var(--solvi-shadow);
-        border-top: 6px solid var(--solvi-medium);
-    }
-    .solvi-card-title {font-size: 1.9rem; font-weight: 800; color: var(--solvi-primary);}
-
-    .solvi-upload {
-        border: 3px dashed rgba(46,139,87,0.3);
-        border-radius: 20px;
-        background: #f9fbf9;
-        text-align: center;
-        padding: 3rem;
-        margin: 2rem 0;
-        transition: 0.3s;
-    }
-    .solvi-upload:hover {border-color: var(--solvi-medium); background: #eef8ef; transform: translateY(-3px);}
-    .solvi-upload-icon {font-size: 3rem; color: var(--solvi-medium); margin-bottom: 1rem;}
-
-    .solvi-alert {
-        border-radius: 12px;
-        padding: 1.5rem 2rem;
-        margin: 1rem 0;
-        box-shadow: 0 5px 20px var(--solvi-shadow);
-        font-weight: 600;
-    }
-    .solvi-alert.success {background: #edf7ed; border-left: 5px solid var(--solvi-light);}
-    .solvi-alert.warning {background: #fff9e5; border-left: 5px solid #ffb300;}
-    .solvi-alert.error {background: #ffebee; border-left: 5px solid #e53935;}
-    .solvi-alert.info {background: #e3f2fd; border-left: 5px solid #2196f3;}
-
-    .solvi-metrics {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
         gap: 1.5rem;
-        margin: 2.5rem 0;
+        margin-top: 2rem;
     }
     .solvi-metric {
         background: white;
-        border-radius: 16px;
-        padding: 2.5rem;
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
+        box-shadow: var(--solvi-shadow);
         text-align: center;
-        border: 2px solid #eaf3ea;
-        box-shadow: 0 6px 25px var(--solvi-shadow);
     }
-    .solvi-metric-value {font-size: 2.8rem; font-weight: 900; color: var(--solvi-primary);}
-    .solvi-metric-label {text-transform: uppercase; font-size: 0.9rem; color: #555; letter-spacing: 1px;}
+    .solvi-metric h3 {
+        color: var(--solvi-green);
+        font-size: 2rem;
+        margin: 0;
+    }
+    .solvi-metric p {
+        margin: 0;
+        color: #444;
+    }
 
+    /* === FOOTER === */
     .solvi-footer {
-        background: linear-gradient(180deg, var(--solvi-primary), var(--solvi-medium));
+        background: var(--solvi-green-dark);
         color: white;
-        padding: 3rem 2rem;
-        border-radius: 20px;
         text-align: center;
+        padding: 2rem;
+        border-radius: 16px;
         margin-top: 3rem;
-        box-shadow: 0 10px 40px var(--solvi-shadow);
     }
-    .solvi-footer p {text-transform: uppercase; letter-spacing: 1px; margin: 0.5rem 0;}
-    a.solvi-link {color: white; text-decoration: none; font-weight: 700; border-bottom: 2px solid rgba(255,255,255,0.4);}
-    a.solvi-link:hover {border-color: white;}
 </style>
 """, unsafe_allow_html=True)
 
-
 # ======================================================
-# 🧠 FUNÇÕES DE ANÁLISE
+# 🧠 CLASSES DE ANÁLISE
 # ======================================================
 class FREAnalyzer:
     def __init__(self, api_key):
         openai.api_key = api_key
         self.client = openai.OpenAI(api_key=api_key)
 
-    def extract_text_from_pdf(self, pdf_file):
-        try:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
-            return "\n".join([page.extract_text() for page in pdf_reader.pages])
-        except Exception as e:
-            st.error(f"Erro ao ler PDF: {e}")
-            return ""
+    def extract_text_from_pdf(self, file):
+        reader = PyPDF2.PdfReader(file)
+        return "\n".join([page.extract_text() for page in reader.pages])
 
-    def extract_text_from_docx(self, docx_file):
-        try:
-            doc = docx.Document(docx_file)
-            return "\n".join([p.text for p in doc.paragraphs])
-        except Exception as e:
-            st.error(f"Erro ao ler DOCX: {e}")
-            return ""
+    def extract_text_from_docx(self, file):
+        doc = docx.Document(file)
+        return "\n".join([p.text for p in doc.paragraphs])
 
-    def extract_text_from_file(self, uploaded_file):
-        if uploaded_file.type == "application/pdf":
-            return self.extract_text_from_pdf(uploaded_file)
-        elif uploaded_file.type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"]:
-            return self.extract_text_from_docx(uploaded_file)
-        else:
-            st.error("Formato não suportado.")
-            return ""
+    def extract_text(self, file):
+        if file.type == "application/pdf":
+            return self.extract_text_from_pdf(file)
+        elif "word" in file.type:
+            return self.extract_text_from_docx(file)
+        return ""
 
-    def analyze_fre_section(self, fre_text, cvm_text, section_name, section_content):
+    def analyze(self, fre_text, cvm_text):
         prompt = f"""
-        Você é um especialista da CVM.
-        Compare a seção '{section_name}' do FRE abaixo com as normas CVM e gere um parecer JSON estruturado.
-        FRE:
-        {section_content[:3000]}
-        Normas CVM:
-        {cvm_text[:5000]}
+        Analise o seguinte FRE e compare com as normas CVM.
+        Identifique seções não conformes e explique brevemente o motivo.
+        Gere um JSON com chaves: "conformidade", "pontos_criticos", "sugestoes".
+        FRE: {fre_text[:3000]}
+        CVM: {cvm_text[:3000]}
         """
         try:
             resp = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1800
+                temperature=0.1
             )
             content = resp.choices[0].message.content
-            json_start, json_end = content.find("{"), content.rfind("}") + 1
-            return json.loads(content[json_start:json_end])
-        except Exception:
-            return {
-                "secao": section_name,
-                "conformidade": "ERRO",
-                "pontos_atencao": [{"problema": "Falha na análise automática"}]
-            }
-
-    def extract_fre_sections(self, text):
-        sections, current = {}, None
-        patterns = [r"\d+\.\d+\s+.+"]
-
-        lines = text.split("\n")
-        for l in lines:
-            if re.match(patterns[0], l.strip()):
-                if current:
-                    sections[current] = "\n".join(current_content)
-                current = l.strip()
-                current_content = []
-            elif current:
-                current_content.append(l)
-        if current:
-            sections[current] = "\n".join(current_content)
-        return sections
-
+            start, end = content.find("{"), content.rfind("}") + 1
+            return json.loads(content[start:end])
+        except Exception as e:
+            return {"erro": str(e)}
 
 class DocumentComparator:
-    def calcular_similaridade(self, t1, t2):
-        return difflib.SequenceMatcher(None, t1, t2).ratio()
-
-    def dividir_em_paragrafos(self, texto):
-        texto = re.sub(r"\s+", " ", texto.strip())
-        return [p for p in re.split(r"(?<=\.)\s+", texto) if len(p) > 10]
-
-    def encontrar_alteracoes_reais(self, ref, novo):
-        alteracoes = []
-        for par in ref:
-            if par not in novo:
-                alteracoes.append({"tipo": "Removido", "texto": par})
-        for par in novo:
-            if par not in ref:
-                alteracoes.append({"tipo": "Adicionado", "texto": par})
-        return alteracoes
-
+    def compare(self, text1, text2):
+        ratio = difflib.SequenceMatcher(None, text1, text2).ratio()
+        return round(ratio * 100, 2)
 
 # ======================================================
 # 🧩 INTERFACE
 # ======================================================
-def init_session_state():
-    if "current_tab" not in st.session_state:
-        st.session_state.current_tab = "cvm"
-
-
 def render_header():
     st.markdown("""
     <div class="solvi-header">
-        <div class="solvi-header-content">
-            <img src="https://static.wixstatic.com/media/b5b170_1e07cf7f7f82492a9808f9ae7f038596~mv2.png"
-                 alt="Solví Logo" class="solvi-logo">
-            <div>
-                <h1 class="solvi-title">Plataforma Solví</h1>
-                <p class="solvi-subtitle">🌱 Análise Inteligente de Documentos com IA</p>
-            </div>
-            <div class="solvi-badge">Soluções para a Vida</div>
-        </div>
+        <h1>Plataforma Solví</h1>
+        <p>🌱 Análise Inteligente de Documentos com IA</p>
     </div>
     """, unsafe_allow_html=True)
 
-
 def render_navigation():
-    st.markdown('<div class="solvi-navigation">', unsafe_allow_html=True)
+    st.markdown('<div class="solvi-nav">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📊 Análise CVM", key="tab_cvm", use_container_width=True):
+        if st.button("📊 Análise CVM", use_container_width=True):
             st.session_state.current_tab = "cvm"
-            st.experimental_set_query_params(tab="cvm")
-            st.rerun()
+            st.experimental_rerun()
     with col2:
-        if st.button("📚 Comparação de Documentos", key="tab_comparison", use_container_width=True):
-            st.session_state.current_tab = "comparison"
-            st.experimental_set_query_params(tab="comparison")
-            st.rerun()
+        if st.button("📚 Comparação de Documentos", use_container_width=True):
+            st.session_state.current_tab = "compare"
+            st.experimental_rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-
-def render_cvm_analysis():
+def render_cvm_tab():
     with st.sidebar:
         st.markdown("### ⚙️ Configurações da Análise")
         api_key = st.text_input("🔑 Chave API OpenAI *", type="password")
-        fre_file = st.file_uploader("📄 Upload do FRE", type=["pdf", "docx"])
+        fre_file = st.file_uploader("📄 FRE (PDF ou DOCX)", type=["pdf", "docx"])
         cvm_files = st.file_uploader("📚 Documentos CVM", type=["pdf", "docx"], accept_multiple_files=True)
-
     if not api_key:
-        st.warning("Insira sua chave API para continuar.")
+        st.info("Insira sua chave API para iniciar.")
         return
-
     if not fre_file or not cvm_files:
-        st.markdown("""
-        <div class="solvi-upload">
-            <div class="solvi-upload-icon">📄</div>
-            <p>Envie o FRE e ao menos um documento CVM para iniciar a análise.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="solvi-upload">Envie o FRE e pelo menos um documento CVM.</div>', unsafe_allow_html=True)
         return
+    analyzer = FREAnalyzer(api_key)
+    if st.button("🔍 Iniciar Análise", use_container_width=True):
+        with st.spinner("Analisando..."):
+            fre_text = analyzer.extract_text(fre_file)
+            cvm_text = "\n".join([analyzer.extract_text(f) for f in cvm_files])
+            result = analyzer.analyze(fre_text, cvm_text)
+        if "erro" in result:
+            st.error(f"Erro: {result['erro']}")
+        else:
+            st.success("✅ Análise concluída com sucesso!")
+            st.json(result)
 
-    if st.button("🔍 Iniciar Análise CVM", use_container_width=True):
-        analyzer = FREAnalyzer(api_key)
-        fre_text = analyzer.extract_text_from_file(fre_file)
-        cvm_text = "\n".join([analyzer.extract_text_from_file(f) for f in cvm_files])
-        sections = analyzer.extract_fre_sections(fre_text)
-        results = []
-        progress = st.progress(0)
-        for i, (nome, conteudo) in enumerate(sections.items()):
-            results.append(analyzer.analyze_fre_section(fre_text, cvm_text, nome, conteudo))
-            progress.progress((i + 1) / len(sections))
-        st.session_state.analysis_results = results
-        st.success("✅ Análise concluída com sucesso!")
-
-    if st.session_state.get("analysis_results"):
-        total = sum(len(r.get("pontos_atencao", [])) for r in st.session_state.analysis_results)
-        st.markdown(f"""
-        <div class="solvi-metrics">
-            <div class="solvi-metric"><div class="solvi-metric-value">{total}</div><div class="solvi-metric-label">Pontos Identificados</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-
-def render_document_comparison():
+def render_compare_tab():
     col1, col2 = st.columns(2)
     with col1:
-        arquivo_ref = st.file_uploader("📄 Documento de Referência", type=["pdf", "docx"])
+        ref = st.file_uploader("📄 Documento Original", type=["pdf", "docx"])
     with col2:
-        arquivo_novo = st.file_uploader("📄 Novo Documento", type=["pdf", "docx"])
-
-    if not arquivo_ref or not arquivo_novo:
-        st.markdown("""
-        <div class="solvi-upload">
-            <div class="solvi-upload-icon">📚</div>
-            <p>Envie dois documentos para comparar versões.</p>
+        novo = st.file_uploader("📄 Documento Novo", type=["pdf", "docx"])
+    if not ref or not novo:
+        st.markdown('<div class="solvi-upload">Envie dois documentos para comparar.</div>', unsafe_allow_html=True)
+        return
+    if st.button("🔍 Comparar", use_container_width=True):
+        comp = DocumentComparator()
+        doc_ref = docx.Document(ref)
+        doc_new = docx.Document(novo)
+        text_ref = "\n".join([p.text for p in doc_ref.paragraphs])
+        text_new = "\n".join([p.text for p in doc_new.paragraphs])
+        sim = comp.compare(text_ref, text_new)
+        st.markdown(f"""
+        <div class="solvi-metrics">
+            <div class="solvi-metric"><h3>{sim}%</h3><p>Similaridade entre versões</p></div>
         </div>
         """, unsafe_allow_html=True)
-        return
-
-    if st.button("🔍 Comparar Documentos", use_container_width=True):
-        comp = DocumentComparator()
-        text_ref = docx.Document(arquivo_ref).paragraphs if arquivo_ref.name.endswith(".docx") else []
-        text_novo = docx.Document(arquivo_novo).paragraphs if arquivo_novo.name.endswith(".docx") else []
-        ref_par = [p.text for p in text_ref]
-        novo_par = [p.text for p in text_novo]
-        alteracoes = comp.encontrar_alteracoes_reais(ref_par, novo_par)
-        st.success(f"✅ {len(alteracoes)} alterações detectadas.")
-
 
 def render_footer():
     st.markdown("""
     <div class="solvi-footer">
         <p>🌱 Plataforma Solví • Soluções Inteligentes para Análise de Documentos</p>
-        <p>Desenvolvido com ❤️ para sustentabilidade e inovação</p>
-        <p><a href="https://www.solvi.com" class="solvi-link" target="_blank">Visite solvi.com</a></p>
+        <p><a href="https://www.solvi.com" target="_blank" style="color:white; text-decoration:none; font-weight:600;">Visite solvi.com</a></p>
     </div>
     """, unsafe_allow_html=True)
-
 
 # ======================================================
 # 🚀 MAIN
 # ======================================================
-def main():
-   main()
+if "current_tab" not in st.session_state:
+    st.session_state.current_tab = "cvm"
+
+render_header()
+render_navigation()
+
+if st.session_state.current_tab == "cvm":
+    render_cvm_tab()
+else:
+    render_compare_tab()
+
+render_footer()
