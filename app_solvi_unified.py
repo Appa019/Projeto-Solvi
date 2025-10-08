@@ -1587,12 +1587,34 @@ class AdvancedDocumentComparator:
         # Normalizar o texto primeiro
         texto = self.normalizar_texto_avancado(texto)
         
-        # Padrões para identificar fim de sentença
-        # Evita quebrar em abreviações comuns
-        sentencas = re.split(r'(?<!\b(?:Sr|Sra|Dr|Dra|etc|ex|p\.ex)\.)(?<!\d)\.(?!\d)\s+(?=[A-Z])', texto)
+        # Substituir abreviações comuns primeiro para evitar quebras incorretas
+        abreviacoes_protegidas = {
+            'Sr.': 'Sr_TEMP_',
+            'Sra.': 'Sra_TEMP_',
+            'Dr.': 'Dr_TEMP_',
+            'Dra.': 'Dra_TEMP_',
+            'etc.': 'etc_TEMP_',
+            'ex.': 'ex_TEMP_',
+            'p.ex.': 'pex_TEMP_'
+        }
+        
+        # Proteger abreviações
+        for abrev, temp in abreviacoes_protegidas.items():
+            texto = texto.replace(abrev, temp)
+        
+        # Dividir em sentenças usando padrão mais simples
+        # Quebra em ponto seguido de espaço e letra maiúscula, mas não em números
+        sentencas = re.split(r'\.(?!\d)\s+(?=[A-Z])', texto)
+        
+        # Restaurar abreviações
+        sentencas_restauradas = []
+        for sentenca in sentencas:
+            for abrev, temp in abreviacoes_protegidas.items():
+                sentenca = sentenca.replace(temp, abrev)
+            sentencas_restauradas.append(sentenca)
         
         sentencas_limpas = []
-        for sentenca in sentencas:
+        for sentenca in sentencas_restauradas:
             sentenca = sentenca.strip()
             if sentenca and len(sentenca) > 15:  # Filtrar sentenças muito curtas
                 sentencas_limpas.append(sentenca)
