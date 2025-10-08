@@ -101,13 +101,16 @@ st.markdown("""
         color: var(--solvi-text-light);
         padding: 3rem 0;
         border-radius: 0;
-        margin: -2rem calc(-50vw + 50%) 3rem calc(-50vw + 50%);
+        margin: -3rem calc(-50vw + 50%) 3rem calc(-50vw + 50%);
+        margin-top: -3rem;
         box-shadow: 0 12px 40px var(--solvi-shadow-strong);
         position: relative;
         overflow: hidden;
         min-height: 200px;
         width: 100vw;
         z-index: 10;
+    }
+
     }
     
     .solvi-header::before {
