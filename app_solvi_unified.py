@@ -1646,4 +1646,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-Unir Scripts para Site de Comparação e Análise com IA - Manus
