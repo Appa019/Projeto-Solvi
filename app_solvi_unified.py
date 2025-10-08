@@ -1783,7 +1783,7 @@ def render_header():
                 <img src="https://static.wixstatic.com/media/b5b170_1e07cf7f7f82492a9808f9ae7f038596~mv2.png/v1/crop/x_0,y_0,w_2742,h_1106/fill/w_92,h_37,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/Logotipo%20Solv%C3%AD_edited_edited.png" alt="Solví Logo" class="solvi-logo">
                 <div class="solvi-title-section">
                     <h1 class="solvi-title">Plataforma Solví</h1>
-                    <p class="solvi-subtitle">🌱 Análise Inteligente de Documentos com IA</p>
+                    <p class="solvi-subtitle">Análise Inteligente de Documentos com IA</p>
                 </div>
             </div>
             <div class="solvi-badge">
@@ -1800,28 +1800,28 @@ def render_inspiration_section():
         <div class="solvi-inspiration-item">
             <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Tecnologia Sustentável" class="solvi-inspiration-image">
             <div class="solvi-inspiration-content">
-                <h3 class="solvi-inspiration-title">🔋 Tecnologia Sustentável</h3>
+                <h3 class="solvi-inspiration-title">Tecnologia Sustentável</h3>
                 <p class="solvi-inspiration-desc">Inovação em energia renovável e soluções tecnológicas verdes para um futuro sustentável e próspero para todas as gerações.</p>
             </div>
         </div>
         <div class="solvi-inspiration-item">
             <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Proteção Ambiental" class="solvi-inspiration-image">
             <div class="solvi-inspiration-content">
-                <h3 class="solvi-inspiration-title">🌿 Proteção Ambiental</h3>
+                <h3 class="solvi-inspiration-title">Proteção Ambiental</h3>
                 <p class="solvi-inspiration-desc">Preservação da natureza e biodiversidade através de práticas ambientais responsáveis e sustentáveis que protegem nosso planeta.</p>
             </div>
         </div>
         <div class="solvi-inspiration-item">
             <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Gestão de Resíduos" class="solvi-inspiration-image">
             <div class="solvi-inspiration-content">
-                <h3 class="solvi-inspiration-title">♻️ Gestão de Resíduos</h3>
+                <h3 class="solvi-inspiration-title">Gestão de Resíduos</h3>
                 <p class="solvi-inspiration-desc">Soluções inteligentes para reciclagem e economia circular, transformando resíduos em recursos valiosos para a sociedade.</p>
             </div>
         </div>
         <div class="solvi-inspiration-item">
             <img src="https://static.wixstatic.com/media/b5b170_b587909825174509a2a6a71af0106cc3~mv2.png/v1/fill/w_245,h_357,al_c,q_85,enc_auto/Group%2041.png" alt="Inovação Verde" class="solvi-inspiration-image">
             <div class="solvi-inspiration-content">
-                <h3 class="solvi-inspiration-title">💡 Inovação Verde</h3>
+                <h3 class="solvi-inspiration-title">Inovação Verde</h3>
                 <p class="solvi-inspiration-desc">Desenvolvimento de tecnologias limpas e processos inovadores para sustentabilidade empresarial e crescimento responsável.</p>
             </div>
         </div>
@@ -1835,12 +1835,12 @@ def render_navigation():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("📊 Análise CVM", key="tab_cvm", use_container_width=True):
+        if st.button("Análise CVM", key="tab_cvm", use_container_width=True):
             st.session_state.current_tab = 'cvm'
             st.rerun()
     
     with col2:
-        if st.button("📚 Comparação Visual de Documentos", key="tab_comparison", use_container_width=True):
+        if st.button("Comparação Visual de Documentos", key="tab_comparison", use_container_width=True):
             st.session_state.current_tab = 'comparison'
             st.rerun()
     
@@ -1860,7 +1860,7 @@ def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_n
     st.markdown(f"""
     <div class="diff-viewer">
         <div class="diff-header">
-            <h3 class="diff-title">📊 Comparação Visual: {arquivo_ref} ↔ {arquivo_novo}</h3>
+            <h3 class="diff-title">Comparação Visual: {arquivo_ref} ↔ {arquivo_novo}</h3>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1870,46 +1870,52 @@ def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_n
     
     with col1:
         st.metric(
-            label="➕ Adições",
+            label="Adições",
             value=added_lines,
             delta=f"{(added_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
         )
     
     with col2:
         st.metric(
-            label="➖ Remoções", 
+            label="Remoções", 
             value=removed_lines,
             delta=f"{(removed_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
         )
     
     with col3:
         st.metric(
-            label="🔄 Modificações",
+            label="Modificações",
             value=modified_lines,
             delta=f"{(modified_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
         )
     
     with col4:
         st.metric(
-            label="📊 Total de Linhas",
+            label="Total de Linhas",
             value=total_lines,
             delta=f"Taxa de mudança: {((added_lines + removed_lines + modified_lines) / total_lines * 100):.1f}%" if total_lines > 0 else "0%"
         )
     
-    # Controles de visualização
-    st.markdown("### ⚙️ Controles de Visualização")
+    # Controles de visualização aprimorados
+    st.markdown("### Controles de Visualização")
     
-    col_ctrl1, col_ctrl2 = st.columns(2)
+    col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
     
     with col_ctrl1:
-        show_all = st.radio(
-            "Exibir:",
-            ["Todas as linhas", "Apenas diferenças"],
-            index=0,
-            horizontal=True
+        filtro_tipo = st.selectbox(
+            "Filtrar por tipo:",
+            ["Todos", "Apenas adicionados", "Apenas removidos", "Apenas modificados", "Apenas inalterados", "Apenas diferenças"],
+            index=0
         )
     
     with col_ctrl2:
+        max_linhas = st.selectbox(
+            "Máximo de linhas:",
+            [50, 100, 200, 500, 1000],
+            index=2
+        )
+    
+    with col_ctrl3:
         view_mode = st.radio(
             "Modo de visualização:",
             ["Unificado", "Lado a lado"],
@@ -1918,19 +1924,30 @@ def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_n
         )
     
     # Filtrar dados baseado na seleção
-    if show_all == "Apenas diferenças":
+    if filtro_tipo == "Apenas adicionados":
+        filtered_data = [d for d in diff_data if d['tipo'] == 'added']
+    elif filtro_tipo == "Apenas removidos":
+        filtered_data = [d for d in diff_data if d['tipo'] == 'removed']
+    elif filtro_tipo == "Apenas modificados":
+        filtered_data = [d for d in diff_data if d['tipo'] == 'modified']
+    elif filtro_tipo == "Apenas inalterados":
+        filtered_data = [d for d in diff_data if d['tipo'] == 'unchanged']
+    elif filtro_tipo == "Apenas diferenças":
         filtered_data = [d for d in diff_data if d['tipo'] != 'unchanged']
-    else:
+    else:  # Todos
         filtered_data = diff_data
     
-    # Limitar a 200 linhas para performance
-    display_data = filtered_data[:200]
+    # Limitar linhas baseado na seleção
+    display_data = filtered_data[:max_linhas]
     
-    if len(filtered_data) > 200:
-        st.warning(f"⚠️ Mostrando apenas as primeiras 200 linhas de {len(filtered_data)} total. Use filtros para ver mais.")
+    if len(filtered_data) > max_linhas:
+        st.warning(f"Mostrando apenas as primeiras {max_linhas} linhas de {len(filtered_data)} total. Ajuste o filtro para ver mais.")
+    
+    # Informações de filtro aplicado
+    st.info(f"Filtro aplicado: {filtro_tipo} | Exibindo: {len(display_data)} de {len(filtered_data)} linhas filtradas | Total no documento: {total_lines} linhas")
     
     # Visualização das diferenças
-    st.markdown("### 🎨 Diferenças Detectadas")
+    st.markdown("### Diferenças Detectadas")
     
     # Container com scroll para as diferenças
     diff_container = st.container()
@@ -1939,21 +1956,24 @@ def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_n
         for i, line_data in enumerate(display_data):
             tipo = line_data['tipo']
             numero = line_data['numero']
-            conteudo = line_data['conteudo'][:300]  # Limitar tamanho
+            conteudo = line_data['conteudo'][:500]  # Aumentar limite para mais contexto
+            
+            # Calcular página aproximada (assumindo 50 linhas por página)
+            pagina = (numero // 50) + 1
+            linha_na_pagina = numero % 50 if numero % 50 != 0 else 50
             
             # Escolher cor e ícone baseado no tipo
             if tipo == 'added':
-                st.success(f"**Linha {numero}** ➕ **ADICIONADA**\n```\n{conteudo}\n```")
+                st.success(f"**Linha {numero}** (Página {pagina}, Linha {linha_na_pagina}) | **ADICIONADA**\n```\n{conteudo}\n```")
             elif tipo == 'removed':
-                st.error(f"**Linha {numero}** ➖ **REMOVIDA**\n```\n{conteudo}\n```")
+                st.error(f"**Linha {numero}** (Página {pagina}, Linha {linha_na_pagina}) | **REMOVIDA**\n```\n{conteudo}\n```")
             elif tipo == 'modified':
-                st.warning(f"**Linha {numero}** 🔄 **MODIFICADA**\n```\n{conteudo}\n```")
+                st.warning(f"**Linha {numero}** (Página {pagina}, Linha {linha_na_pagina}) | **MODIFICADA**\n```\n{conteudo}\n```")
             else:  # unchanged
-                if show_all == "Todas as linhas":
-                    st.info(f"**Linha {numero}** ✅ **INALTERADA**\n```\n{conteudo}\n```")
+                st.info(f"**Linha {numero}** (Página {pagina}, Linha {linha_na_pagina}) | **INALTERADA**\n```\n{conteudo}\n```")
     
     # Resumo final
-    st.markdown("### 📈 Resumo da Análise")
+    st.markdown("### Resumo da Análise")
     
     resumo_cols = st.columns(6)
     
