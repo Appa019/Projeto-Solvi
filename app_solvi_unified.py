@@ -1,7 +1,8 @@
+
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
 Aplicação unificada que combina análise CVM e comparação de documentos
-com design fiel ao site oficial da Solví
+com design fiel ao site oficial da Solví - Versão Final
 """
 
 import streamlit as st
@@ -37,7 +38,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado baseado no design oficial da Solví
+# CSS customizado baseado no design oficial da Solví com paleta verde escuro
 st.markdown("""
 <style>
     /* Importar fontes Google */
@@ -55,16 +56,33 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
+    /* Paleta de cores verde escuro Solví */
+    :root {
+        --solvi-dark-green: #0d4f1c;
+        --solvi-primary-green: #1b5e20;
+        --solvi-medium-green: #2e7d32;
+        --solvi-light-green: #388e3c;
+        --solvi-accent-green: #4caf50;
+        --solvi-bright-green: #66bb6a;
+        --solvi-surface: #f1f8e9;
+        --solvi-background: #e8f5e8;
+        --solvi-white: #ffffff;
+        --solvi-text-dark: #1b5e20;
+        --solvi-text-light: #ffffff;
+        --solvi-shadow: rgba(13, 79, 28, 0.15);
+    }
+    
     /* Header principal com logo da Solví */
     .solvi-header {
-        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #4caf50 100%);
-        color: white;
-        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 30%, var(--solvi-medium-green) 70%, var(--solvi-light-green) 100%);
+        color: var(--solvi-text-light);
+        padding: 2rem 2.5rem;
         border-radius: 0;
         margin: -1rem -1rem 2rem -1rem;
-        box-shadow: 0 4px 20px rgba(27, 94, 32, 0.3);
+        box-shadow: 0 8px 32px var(--solvi-shadow);
         position: relative;
         overflow: hidden;
+        min-height: 140px;
     }
     
     .solvi-header::before {
@@ -74,10 +92,10 @@ st.markdown("""
         left: 0;
         right: 0;
         bottom: 0;
-        background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
         background-size: cover;
         background-position: center;
-        opacity: 0.1;
+        opacity: 0.08;
         z-index: 0;
     }
     
@@ -88,95 +106,158 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 1.5rem;
     }
     
     .solvi-logo-section {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 1.5rem;
     }
     
     .solvi-logo {
-        height: 50px;
+        height: 60px;
         width: auto;
-        filter: brightness(0) invert(1);
+        background: var(--solvi-white);
+        padding: 8px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     
     .solvi-title {
-        font-size: 2.2rem;
-        font-weight: 700;
+        font-size: 2.5rem;
+        font-weight: 800;
         font-family: 'Inter', sans-serif;
         margin: 0;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        letter-spacing: -0.5px;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        letter-spacing: -1px;
+        line-height: 1.1;
     }
     
     .solvi-subtitle {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-top: 0.25rem;
-        font-weight: 400;
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin-top: 0.5rem;
+        font-weight: 500;
         letter-spacing: 0.5px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     }
     
     .solvi-badge {
-        background: rgba(255,255,255,0.15);
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.2);
+        padding: 1rem 2rem;
+        border-radius: 30px;
+        font-size: 1rem;
+        font-weight: 700;
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255,255,255,0.3);
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* Seção de imagens inspiracionais */
+    .solvi-inspiration {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--solvi-surface) 0%, var(--solvi-background) 100%);
+        border-radius: 16px;
+        border: 1px solid var(--solvi-light-green);
+    }
+    
+    .solvi-inspiration-item {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 6px 25px var(--solvi-shadow);
+        transition: all 0.3s ease;
+        background: var(--solvi-white);
+    }
+    
+    .solvi-inspiration-item:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px var(--solvi-shadow);
+    }
+    
+    .solvi-inspiration-image {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .solvi-inspiration-content {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 100%);
+    }
+    
+    .solvi-inspiration-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--solvi-text-dark);
+        margin: 0 0 0.5rem 0;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .solvi-inspiration-desc {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.5;
+        margin: 0;
     }
     
     /* Navegação por abas estilo Solví */
     .solvi-navigation {
-        background: white;
-        border-radius: 12px;
-        padding: 0.5rem;
-        margin: 1.5rem 0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        border: 1px solid #e8f5e8;
+        background: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 100%);
+        border-radius: 16px;
+        padding: 1rem;
+        margin: 2rem 0;
+        box-shadow: 0 6px 30px var(--solvi-shadow);
+        border: 2px solid var(--solvi-background);
     }
     
     .solvi-nav-button {
         display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 2rem;
-        margin: 0.25rem;
-        border-radius: 8px;
+        gap: 1rem;
+        padding: 1.25rem 2.5rem;
+        margin: 0.5rem;
+        border-radius: 12px;
         background: transparent;
-        color: #2e7d32;
-        font-weight: 600;
+        color: var(--solvi-text-dark);
+        font-weight: 700;
         text-decoration: none;
         transition: all 0.3s ease;
-        border: 2px solid transparent;
+        border: 3px solid transparent;
         cursor: pointer;
         font-family: 'Inter', sans-serif;
-        font-size: 1rem;
+        font-size: 1.1rem;
         width: 100%;
         justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
     .solvi-nav-button:hover {
-        background: #e8f5e8;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
+        background: linear-gradient(135deg, var(--solvi-background) 0%, var(--solvi-surface) 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px var(--solvi-shadow);
+        border-color: var(--solvi-light-green);
     }
     
     .solvi-nav-button.active {
-        background: linear-gradient(135deg, #2e7d32, #4caf50);
-        color: white;
-        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        background: linear-gradient(135deg, var(--solvi-primary-green) 0%, var(--solvi-medium-green) 50%, var(--solvi-light-green) 100%);
+        color: var(--solvi-text-light);
+        box-shadow: 0 8px 30px var(--solvi-shadow);
+        border-color: var(--solvi-dark-green);
     }
     
     .solvi-nav-icon {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -184,12 +265,12 @@ st.markdown("""
     
     /* Cards estilo Solví */
     .solvi-card {
-        background: white;
-        border-radius: 16px;
-        padding: 2rem;
-        margin: 1.5rem 0;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-        border: 1px solid #e8f5e8;
+        background: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin: 2rem 0;
+        box-shadow: 0 12px 40px var(--solvi-shadow);
+        border: 2px solid var(--solvi-background);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
@@ -201,62 +282,66 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #2e7d32, #4caf50, #8bc34a);
+        height: 6px;
+        background: linear-gradient(90deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 25%, var(--solvi-medium-green) 50%, var(--solvi-light-green) 75%, var(--solvi-accent-green) 100%);
     }
     
     .solvi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        transform: translateY(-6px);
+        box-shadow: 0 20px 60px var(--solvi-shadow);
+        border-color: var(--solvi-light-green);
     }
     
     .solvi-card-header {
         display: flex;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e8f5e8;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 3px solid var(--solvi-background);
     }
     
     .solvi-card-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #4caf50, #8bc34a);
-        border-radius: 12px;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--solvi-medium-green) 0%, var(--solvi-light-green) 50%, var(--solvi-accent-green) 100%);
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        margin-right: 1.5rem;
+        font-size: 1.8rem;
+        box-shadow: 0 6px 20px var(--solvi-shadow);
+        border: 2px solid var(--solvi-white);
     }
     
     .solvi-card-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1b5e20;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--solvi-text-dark);
         margin: 0;
         font-family: 'Inter', sans-serif;
         letter-spacing: -0.5px;
+        line-height: 1.2;
     }
     
     /* Métricas estilo Solví */
     .solvi-metrics {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 2rem;
+        margin: 2.5rem 0;
     }
     
     .solvi-metric {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
-        border-radius: 16px;
-        padding: 2rem;
+        background: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 50%, var(--solvi-background) 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
         text-align: center;
-        border: 1px solid #e8f5e8;
+        border: 2px solid var(--solvi-background);
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 8px 30px var(--solvi-shadow);
     }
     
     .solvi-metric::before {
@@ -265,64 +350,70 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #2e7d32, #4caf50);
+        height: 4px;
+        background: linear-gradient(90deg, var(--solvi-primary-green) 0%, var(--solvi-medium-green) 50%, var(--solvi-light-green) 100%);
     }
     
     .solvi-metric:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(46, 125, 50, 0.15);
+        transform: translateY(-6px);
+        box-shadow: 0 15px 45px var(--solvi-shadow);
+        border-color: var(--solvi-light-green);
     }
     
     .solvi-metric-value {
-        font-size: 3rem;
-        font-weight: 800;
-        color: #2e7d32;
-        margin-bottom: 0.5rem;
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: var(--solvi-primary-green);
+        margin-bottom: 0.75rem;
         font-family: 'Inter', sans-serif;
         line-height: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
     
     .solvi-metric-label {
-        color: #666;
-        font-size: 0.9rem;
-        font-weight: 600;
+        color: #555;
+        font-size: 1rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        font-family: 'Inter', sans-serif;
     }
     
     /* Botões estilo Solví */
     .stButton > button {
-        background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
-        color: white;
+        background: linear-gradient(135deg, var(--solvi-primary-green) 0%, var(--solvi-medium-green) 50%, var(--solvi-light-green) 100%);
+        color: var(--solvi-text-light);
         border: none;
-        border-radius: 12px;
-        padding: 1rem 2.5rem;
-        font-weight: 600;
-        font-size: 1rem;
+        border-radius: 16px;
+        padding: 1.25rem 3rem;
+        font-weight: 700;
+        font-size: 1.1rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        box-shadow: 0 6px 20px var(--solvi-shadow);
         font-family: 'Inter', sans-serif;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         text-transform: uppercase;
+        border: 2px solid transparent;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
-        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px var(--solvi-shadow);
+        background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 50%, var(--solvi-medium-green) 100%);
+        border-color: var(--solvi-white);
     }
     
     /* Alertas estilo Solví */
     .solvi-alert {
-        border-radius: 12px;
-        padding: 1.5rem 2rem;
-        margin: 1.5rem 0;
-        border-left: 5px solid;
-        font-weight: 500;
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        margin: 2rem 0;
+        border-left: 6px solid;
+        font-weight: 600;
         font-family: 'Inter', sans-serif;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.08);
     }
     
     .solvi-alert::before {
@@ -331,139 +422,183 @@ st.markdown("""
         top: 0;
         right: 0;
         bottom: 0;
-        width: 4px;
+        width: 6px;
         background: inherit;
     }
     
     .solvi-alert.success {
-        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-        border-color: #4caf50;
-        color: #1b5e20;
+        background: linear-gradient(135deg, var(--solvi-surface) 0%, #f1f8e9 50%, #e8f5e8 100%);
+        border-color: var(--solvi-accent-green);
+        color: var(--solvi-text-dark);
     }
     
     .solvi-alert.warning {
-        background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+        background: linear-gradient(135deg, #fff8e1 0%, #fffde7 50%, #f9fbe7 100%);
         border-color: #ff9800;
         color: #e65100;
     }
     
     .solvi-alert.error {
-        background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+        background: linear-gradient(135deg, #ffebee 0%, #fce4ec 50%, #f3e5f5 100%);
         border-color: #f44336;
         color: #c62828;
     }
     
     .solvi-alert.info {
-        background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
+        background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 50%, #e0f2f1 100%);
         border-color: #2196f3;
         color: #0d47a1;
     }
     
     /* Sidebar estilo Solví */
     .css-1d391kg {
-        background: linear-gradient(180deg, #f8f9fa 0%, #e8f5e8 100%);
+        background: linear-gradient(180deg, var(--solvi-surface) 0%, var(--solvi-background) 100%);
     }
     
     .css-1d391kg .css-1v0mbdj {
-        border-radius: 12px;
-        margin-bottom: 1rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px var(--solvi-shadow);
     }
     
     /* Upload areas */
     .solvi-upload {
-        border: 3px dashed #4caf50;
-        border-radius: 16px;
-        padding: 3rem 2rem;
+        border: 4px dashed var(--solvi-light-green);
+        border-radius: 20px;
+        padding: 4rem 2.5rem;
         text-align: center;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+        background: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 50%, var(--solvi-background) 100%);
         transition: all 0.3s ease;
-        margin: 1rem 0;
+        margin: 2rem 0;
+        box-shadow: 0 8px 30px var(--solvi-shadow);
     }
     
     .solvi-upload:hover {
-        border-color: #2e7d32;
-        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-        transform: translateY(-2px);
+        border-color: var(--solvi-primary-green);
+        background: linear-gradient(135deg, var(--solvi-surface) 0%, var(--solvi-background) 50%, #dcedc8 100%);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px var(--solvi-shadow);
     }
     
     .solvi-upload-icon {
-        font-size: 3rem;
-        color: #4caf50;
-        margin-bottom: 1rem;
+        font-size: 4rem;
+        color: var(--solvi-light-green);
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
     
     .solvi-upload-text {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #2e7d32;
-        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--solvi-text-dark);
+        margin-bottom: 1rem;
+        font-family: 'Inter', sans-serif;
     }
     
     .solvi-upload-subtext {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: #666;
+        line-height: 1.6;
+        font-weight: 500;
     }
     
     /* Progress bars */
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #4caf50, #8bc34a);
-        border-radius: 10px;
+        background: linear-gradient(90deg, var(--solvi-medium-green) 0%, var(--solvi-light-green) 50%, var(--solvi-accent-green) 100%);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--solvi-shadow);
     }
     
     /* Expanders */
     .streamlit-expanderHeader {
-        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
-        border-radius: 12px;
-        font-weight: 600;
-        color: #1b5e20;
-        border: 1px solid #c8e6c9;
+        background: linear-gradient(135deg, var(--solvi-surface) 0%, var(--solvi-background) 100%);
+        border-radius: 16px;
+        font-weight: 700;
+        color: var(--solvi-text-dark);
+        border: 2px solid var(--solvi-background);
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
     }
     
     .streamlit-expanderContent {
-        border-radius: 0 0 12px 12px;
-        border: 1px solid #c8e6c9;
+        border-radius: 0 0 16px 16px;
+        border: 2px solid var(--solvi-background);
         border-top: none;
+        background: var(--solvi-white);
     }
     
     /* Selectbox e inputs */
     .stSelectbox > div > div {
-        border-radius: 12px;
-        border-color: #4caf50;
+        border-radius: 16px;
+        border-color: var(--solvi-light-green);
+        border-width: 2px;
+        font-family: 'Inter', sans-serif;
     }
     
     .stTextInput > div > div > input {
-        border-radius: 12px;
-        border-color: #4caf50;
+        border-radius: 16px;
+        border-color: var(--solvi-light-green);
+        border-width: 2px;
         font-family: 'Inter', sans-serif;
+        padding: 1rem;
     }
     
     .stTextArea > div > div > textarea {
-        border-radius: 12px;
-        border-color: #4caf50;
+        border-radius: 16px;
+        border-color: var(--solvi-light-green);
+        border-width: 2px;
         font-family: 'Inter', sans-serif;
+        padding: 1rem;
     }
     
     /* Dataframes */
     .stDataFrame {
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 30px var(--solvi-shadow);
+        border: 2px solid var(--solvi-background);
     }
     
     /* Footer */
     .solvi-footer {
-        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 16px;
-        margin: 3rem 0 1rem 0;
+        background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 50%, var(--solvi-medium-green) 100%);
+        color: var(--solvi-text-light);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        margin: 4rem 0 2rem 0;
         text-align: center;
+        box-shadow: 0 12px 40px var(--solvi-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .solvi-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.05;
+        z-index: 0;
+    }
+    
+    .solvi-footer-content {
+        position: relative;
+        z-index: 1;
     }
     
     .solvi-footer-logo {
-        height: 40px;
-        margin-bottom: 1rem;
-        filter: brightness(0) invert(1);
+        height: 50px;
+        margin-bottom: 1.5rem;
+        background: var(--solvi-white);
+        padding: 8px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
     /* Responsividade */
@@ -471,11 +606,15 @@ st.markdown("""
         .solvi-header-content {
             flex-direction: column;
             text-align: center;
-            gap: 1rem;
+            gap: 1.5rem;
         }
         
         .solvi-title {
-            font-size: 1.8rem;
+            font-size: 2rem;
+        }
+        
+        .solvi-subtitle {
+            font-size: 1rem;
         }
         
         .main .block-container {
@@ -488,7 +627,19 @@ st.markdown("""
         }
         
         .solvi-metric-value {
-            font-size: 2.5rem;
+            font-size: 3rem;
+        }
+        
+        .solvi-inspiration {
+            grid-template-columns: 1fr;
+        }
+        
+        .solvi-card {
+            padding: 2rem;
+        }
+        
+        .solvi-upload {
+            padding: 3rem 2rem;
         }
     }
     
@@ -496,7 +647,7 @@ st.markdown("""
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(40px);
         }
         to {
             opacity: 1;
@@ -504,27 +655,50 @@ st.markdown("""
         }
     }
     
-    .solvi-card, .solvi-metric {
-        animation: fadeInUp 0.6s ease-out;
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    .solvi-card, .solvi-metric, .solvi-inspiration-item {
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .solvi-logo {
+        animation: pulse 3s ease-in-out infinite;
     }
     
     /* Scrollbar personalizada */
     ::-webkit-scrollbar {
-        width: 8px;
+        width: 10px;
     }
     
     ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
+        background: var(--solvi-surface);
+        border-radius: 12px;
     }
     
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #4caf50, #8bc34a);
-        border-radius: 10px;
+        background: linear-gradient(135deg, var(--solvi-medium-green) 0%, var(--solvi-light-green) 100%);
+        border-radius: 12px;
+        border: 2px solid var(--solvi-surface);
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #2e7d32, #4caf50);
+        background: linear-gradient(135deg, var(--solvi-primary-green) 0%, var(--solvi-medium-green) 100%);
+    }
+    
+    /* Efeitos especiais */
+    .solvi-glow {
+        box-shadow: 0 0 20px var(--solvi-light-green), 0 0 40px var(--solvi-light-green), 0 0 60px var(--solvi-light-green);
+    }
+    
+    .solvi-pulse {
+        animation: pulse 2s ease-in-out infinite;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -922,14 +1096,52 @@ def render_header():
     <div class="solvi-header">
         <div class="solvi-header-content">
             <div class="solvi-logo-section">
-                <img src="https://www.solvi.com/images/logo-solvi-white.png" alt="Solví Logo" class="solvi-logo">
+                <svg class="solvi-logo" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="60" fill="#1b5e20" rx="8"/>
+                    <text x="100" y="35" text-anchor="middle" fill="white" font-family="Inter, sans-serif" font-size="24" font-weight="800">solví</text>
+                </svg>
                 <div>
                     <h1 class="solvi-title">Plataforma Solví</h1>
-                    <p class="solvi-subtitle">Análise Inteligente de Documentos com IA</p>
+                    <p class="solvi-subtitle">🌱 Análise Inteligente de Documentos com IA</p>
                 </div>
             </div>
             <div class="solvi-badge">
                 Soluções para a vida
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_inspiration_section():
+    """Renderiza seção de imagens inspiracionais"""
+    st.markdown("""
+    <div class="solvi-inspiration">
+        <div class="solvi-inspiration-item">
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Tecnologia Sustentável" class="solvi-inspiration-image">
+            <div class="solvi-inspiration-content">
+                <h3 class="solvi-inspiration-title">🔋 Tecnologia Sustentável</h3>
+                <p class="solvi-inspiration-desc">Inovação em energia renovável e soluções tecnológicas verdes para um futuro sustentável.</p>
+            </div>
+        </div>
+        <div class="solvi-inspiration-item">
+            <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Proteção Ambiental" class="solvi-inspiration-image">
+            <div class="solvi-inspiration-content">
+                <h3 class="solvi-inspiration-title">🌿 Proteção Ambiental</h3>
+                <p class="solvi-inspiration-desc">Preservação da natureza e biodiversidade através de práticas ambientais responsáveis.</p>
+            </div>
+        </div>
+        <div class="solvi-inspiration-item">
+            <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Gestão de Resíduos" class="solvi-inspiration-image">
+            <div class="solvi-inspiration-content">
+                <h3 class="solvi-inspiration-title">♻️ Gestão de Resíduos</h3>
+                <p class="solvi-inspiration-desc">Soluções inteligentes para reciclagem e economia circular, transformando resíduos em recursos.</p>
+            </div>
+        </div>
+        <div class="solvi-inspiration-item">
+            <img src="https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Inovação Verde" class="solvi-inspiration-image">
+            <div class="solvi-inspiration-content">
+                <h3 class="solvi-inspiration-title">💡 Inovação Verde</h3>
+                <p class="solvi-inspiration-desc">Desenvolvimento de tecnologias limpas e processos inovadores para sustentabilidade empresarial.</p>
             </div>
         </div>
     </div>
@@ -959,9 +1171,9 @@ def render_cvm_analysis():
             <div class="solvi-card-icon">📊</div>
             <h2 class="solvi-card-title">Análise FRE vs Normas CVM</h2>
         </div>
-        <p style="color: #666; font-size: 1.1rem; line-height: 1.6;">
+        <p style="color: #666; font-size: 1.2rem; line-height: 1.7; font-weight: 500;">
             Análise automatizada de Formulários de Referência contra normas CVM com identificação 
-            de não conformidades e geração de relatórios detalhados.
+            de não conformidades e geração de relatórios detalhados com base legal específica.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1043,7 +1255,7 @@ def render_cvm_analysis():
         st.markdown(f"""
         <div class="solvi-alert success">
             ✅ <strong>FRE Carregado:</strong> {fre_file.name}<br>
-            📊 Tamanho: {fre_file.size / 1024 / 1024:.2f} MB
+            📊 <strong>Tamanho:</strong> {fre_file.size / 1024 / 1024:.2f} MB
         </div>
         """, unsafe_allow_html=True)
     
@@ -1051,7 +1263,7 @@ def render_cvm_analysis():
         st.markdown(f"""
         <div class="solvi-alert info">
             📚 <strong>Documentos CVM:</strong> {len(cvm_files)} arquivo(s)<br>
-            📊 Total: {sum(f.size for f in cvm_files) / 1024 / 1024:.2f} MB
+            📊 <strong>Total:</strong> {sum(f.size for f in cvm_files) / 1024 / 1024:.2f} MB
         </div>
         """, unsafe_allow_html=True)
     
@@ -1189,9 +1401,9 @@ def render_document_comparison():
             <div class="solvi-card-icon">📚</div>
             <h2 class="solvi-card-title">Comparação Inteligente de Documentos</h2>
         </div>
-        <p style="color: #666; font-size: 1.1rem; line-height: 1.6;">
+        <p style="color: #666; font-size: 1.2rem; line-height: 1.7; font-weight: 500;">
             Compare dois documentos (PDF ou Word) e identifique apenas as alterações reais de conteúdo, 
-            ignorando mudanças de formatação e posicionamento.
+            ignorando mudanças de formatação e posicionamento com algoritmo avançado de normalização.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -1245,7 +1457,8 @@ def render_document_comparison():
                 ✅ Ignora mudanças de posicionamento e formatação<br>
                 ✅ Foca apenas em alterações reais de conteúdo<br>
                 ✅ Detecta modificações com alta precisão<br>
-                ✅ Normaliza texto para comparação precisa
+                ✅ Normaliza texto para comparação precisa<br>
+                ✅ Análise por similaridade semântica
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1393,13 +1606,18 @@ def render_footer():
     """Renderiza o footer da aplicação"""
     st.markdown("""
     <div class="solvi-footer">
-        <img src="https://www.solvi.com/images/logo-solvi-white.png" alt="Solví Logo" class="solvi-footer-logo">
-        <p style="margin: 1rem 0 0.5rem 0; font-size: 1.1rem; font-weight: 600;">
-            🌱 Plataforma Solví - Soluções Inteligentes para Análise de Documentos
-        </p>
-        <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">
-            Desenvolvido com ❤️ para sustentabilidade e inovação
-        </p>
+        <div class="solvi-footer-content">
+            <svg class="solvi-footer-logo" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="60" fill="#1b5e20" rx="8"/>
+                <text x="100" y="35" text-anchor="middle" fill="white" font-family="Inter, sans-serif" font-size="24" font-weight="800">solví</text>
+            </svg>
+            <p style="margin: 1.5rem 0 1rem 0; font-size: 1.3rem; font-weight: 700;">
+                🌱 Plataforma Solví - Soluções Inteligentes para Análise de Documentos
+            </p>
+            <p style="margin: 0; opacity: 0.9; font-size: 1rem; font-weight: 500;">
+                Desenvolvido com ❤️ para sustentabilidade e inovação • Soluções para a vida
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1410,6 +1628,9 @@ def main():
     
     # Renderizar header
     render_header()
+    
+    # Renderizar seção inspiracional
+    render_inspiration_section()
     
     # Renderizar navegação
     render_navigation()
@@ -1425,3 +1646,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+Unir Scripts para Site de Comparação e Análise com IA - Manus
