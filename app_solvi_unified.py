@@ -1847,7 +1847,7 @@ def render_navigation():
     st.markdown("</div>", unsafe_allow_html=True)
 
 def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_novo: str):
-    """Renderiza o visualizador avançado de diferenças"""
+    """Renderiza o visualizador avançado de diferenças usando componentes Streamlit nativos"""
     
     # Calcular estatísticas
     total_lines = len(diff_data)
@@ -1856,107 +1856,155 @@ def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_n
     modified_lines = len([d for d in diff_data if d['tipo'] == 'modified'])
     unchanged_lines = total_lines - added_lines - removed_lines - modified_lines
     
-    # HTML do visualizador
-    diff_html = f"""
+    # Header com estatísticas usando Streamlit nativo
+    st.markdown(f"""
     <div class="diff-viewer">
         <div class="diff-header">
             <h3 class="diff-title">📊 Comparação Visual: {arquivo_ref} ↔ {arquivo_novo}</h3>
-            <div class="diff-stats">
-                <div class="diff-stat added">
-                    <span>+</span>
-                    <span>{added_lines} Adições</span>
-                </div>
-                <div class="diff-stat removed">
-                    <span>-</span>
-                    <span>{removed_lines} Remoções</span>
-                </div>
-                <div class="diff-stat modified">
-                    <span>~</span>
-                    <span>{modified_lines} Modificações</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="diff-controls">
-            <div class="diff-control-group">
-                <span class="diff-control-label">Visualizar:</span>
-                <div class="diff-toggle">
-                    <button class="diff-toggle-btn active">Todas as Alterações</button>
-                    <button class="diff-toggle-btn">Apenas Diferenças</button>
-                </div>
-            </div>
-            <div class="diff-control-group">
-                <span class="diff-control-label">Modo:</span>
-                <div class="diff-toggle">
-                    <button class="diff-toggle-btn active">Lado a Lado</button>
-                    <button class="diff-toggle-btn">Unificado</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="diff-content">
-    """
-    
-    # Adicionar linhas de diferença
-    for i, line_data in enumerate(diff_data[:100]):  # Limitar a 100 linhas para performance
-        tipo = line_data['tipo']
-        numero = line_data['numero']
-        conteudo = html.escape(line_data['conteudo'][:200])  # Limitar tamanho da linha
-        
-        diff_html += f"""
-            <div class="diff-line {tipo}">
-                <div class="diff-line-number">{numero}</div>
-                <div class="diff-line-content">{conteudo}</div>
-            </div>
-        """
-    
-    if len(diff_data) > 100:
-        diff_html += f"""
-            <div class="diff-line unchanged">
-                <div class="diff-line-number">...</div>
-                <div class="diff-line-content">... e mais {len(diff_data) - 100} linhas</div>
-            </div>
-        """
-    
-    diff_html += """
-        </div>
-        
-        <div class="diff-summary">
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">📊</span>
-                <div class="diff-summary-value">""" + str(total_lines) + """</div>
-                <div class="diff-summary-label">Total de Linhas</div>
-            </div>
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">✅</span>
-                <div class="diff-summary-value">""" + str(unchanged_lines) + """</div>
-                <div class="diff-summary-label">Inalteradas</div>
-            </div>
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">➕</span>
-                <div class="diff-summary-value">""" + str(added_lines) + """</div>
-                <div class="diff-summary-label">Adicionadas</div>
-            </div>
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">➖</span>
-                <div class="diff-summary-value">""" + str(removed_lines) + """</div>
-                <div class="diff-summary-label">Removidas</div>
-            </div>
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">🔄</span>
-                <div class="diff-summary-value">""" + str(modified_lines) + """</div>
-                <div class="diff-summary-label">Modificadas</div>
-            </div>
-            <div class="diff-summary-item">
-                <span class="diff-summary-icon">📈</span>
-                <div class="diff-summary-value">""" + f"{((added_lines + removed_lines + modified_lines) / total_lines * 100):.1f}%" + """</div>
-                <div class="diff-summary-label">Taxa de Mudança</div>
-            </div>
         </div>
     </div>
-    """
+    """, unsafe_allow_html=True)
     
-    st.markdown(diff_html, unsafe_allow_html=True)
+    # Estatísticas em colunas
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            label="➕ Adições",
+            value=added_lines,
+            delta=f"{(added_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
+        )
+    
+    with col2:
+        st.metric(
+            label="➖ Remoções", 
+            value=removed_lines,
+            delta=f"{(removed_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
+        )
+    
+    with col3:
+        st.metric(
+            label="🔄 Modificações",
+            value=modified_lines,
+            delta=f"{(modified_lines/total_lines*100):.1f}%" if total_lines > 0 else "0%"
+        )
+    
+    with col4:
+        st.metric(
+            label="📊 Total de Linhas",
+            value=total_lines,
+            delta=f"Taxa de mudança: {((added_lines + removed_lines + modified_lines) / total_lines * 100):.1f}%" if total_lines > 0 else "0%"
+        )
+    
+    # Controles de visualização
+    st.markdown("### ⚙️ Controles de Visualização")
+    
+    col_ctrl1, col_ctrl2 = st.columns(2)
+    
+    with col_ctrl1:
+        show_all = st.radio(
+            "Exibir:",
+            ["Todas as linhas", "Apenas diferenças"],
+            index=0,
+            horizontal=True
+        )
+    
+    with col_ctrl2:
+        view_mode = st.radio(
+            "Modo de visualização:",
+            ["Unificado", "Lado a lado"],
+            index=0,
+            horizontal=True
+        )
+    
+    # Filtrar dados baseado na seleção
+    if show_all == "Apenas diferenças":
+        filtered_data = [d for d in diff_data if d['tipo'] != 'unchanged']
+    else:
+        filtered_data = diff_data
+    
+    # Limitar a 200 linhas para performance
+    display_data = filtered_data[:200]
+    
+    if len(filtered_data) > 200:
+        st.warning(f"⚠️ Mostrando apenas as primeiras 200 linhas de {len(filtered_data)} total. Use filtros para ver mais.")
+    
+    # Visualização das diferenças
+    st.markdown("### 🎨 Diferenças Detectadas")
+    
+    # Container com scroll para as diferenças
+    diff_container = st.container()
+    
+    with diff_container:
+        for i, line_data in enumerate(display_data):
+            tipo = line_data['tipo']
+            numero = line_data['numero']
+            conteudo = line_data['conteudo'][:300]  # Limitar tamanho
+            
+            # Escolher cor e ícone baseado no tipo
+            if tipo == 'added':
+                st.success(f"**Linha {numero}** ➕ **ADICIONADA**\n```\n{conteudo}\n```")
+            elif tipo == 'removed':
+                st.error(f"**Linha {numero}** ➖ **REMOVIDA**\n```\n{conteudo}\n```")
+            elif tipo == 'modified':
+                st.warning(f"**Linha {numero}** 🔄 **MODIFICADA**\n```\n{conteudo}\n```")
+            else:  # unchanged
+                if show_all == "Todas as linhas":
+                    st.info(f"**Linha {numero}** ✅ **INALTERADA**\n```\n{conteudo}\n```")
+    
+    # Resumo final
+    st.markdown("### 📈 Resumo da Análise")
+    
+    resumo_cols = st.columns(6)
+    
+    with resumo_cols[0]:
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{total_lines}</div>
+            <div class="solvi-metric-label">Total de Linhas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with resumo_cols[1]:
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{unchanged_lines}</div>
+            <div class="solvi-metric-label">Inalteradas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with resumo_cols[2]:
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{added_lines}</div>
+            <div class="solvi-metric-label">Adicionadas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with resumo_cols[3]:
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{removed_lines}</div>
+            <div class="solvi-metric-label">Removidas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with resumo_cols[4]:
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{modified_lines}</div>
+            <div class="solvi-metric-label">Modificadas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with resumo_cols[5]:
+        taxa_mudanca = ((added_lines + removed_lines + modified_lines) / total_lines * 100) if total_lines > 0 else 0
+        st.markdown(f"""
+        <div class="solvi-metric">
+            <div class="solvi-metric-value">{taxa_mudanca:.1f}%</div>
+            <div class="solvi-metric-label">Taxa de Mudança</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def render_cvm_analysis():
     """Renderiza a interface premium de análise CVM com SIDEBAR CORRIGIDA"""
