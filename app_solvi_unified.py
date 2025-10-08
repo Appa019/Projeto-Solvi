@@ -92,7 +92,7 @@ st.markdown("""
         overflow: hidden;
         min-height: 250
         px;
-        width: 150vw;
+        width: 100vw;
         margin-left: calc(-50vw + 50%);
     }
     
