@@ -62,6 +62,7 @@ st.markdown("""
         max-width: 1400px;
         padding-left: 2rem;
         padding-right: 2rem;
+        margin-top: 0rem;
     }
     
     /* Ocultar elementos padrão do Streamlit */
