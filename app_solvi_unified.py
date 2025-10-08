@@ -1,7 +1,7 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
-Versão Masterpiece com Sidebar Corrigido - Bizarramente parecida com o site oficial da Solví
-Aplicação  que combina análise CVM e comparação de documentos
+Versão com Visualização Avançada de Diferenças - Premium Visual Diff
+Aplicação premium que combina análise CVM e comparação visual de documentos
 """
 
 import streamlit as st
@@ -28,6 +28,7 @@ import logging
 from pathlib import Path
 import tempfile
 import os
+import html
 
 # Configuração da página com tema Solví - SIDEBAR SEMPRE EXPANDIDA
 st.set_page_config(
@@ -42,12 +43,13 @@ st.set_page_config(
     }
 )
 
-# CSS  Masterpiece - Bizarramente parecido com Solví + SIDEBAR CORRIGIDO
+# CSS Premium Masterpiece + VISUALIZAÇÃO AVANÇADA DE DIFERENÇAS
 st.markdown("""
 <style>
     /* Importar fontes oficiais */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
     
     /* Reset completo e configurações globais */
     * {
@@ -126,6 +128,20 @@ st.markdown("""
         --solvi-shadow-strong: rgba(13, 79, 28, 0.25);
         --solvi-gradient-primary: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 30%, var(--solvi-medium-green) 70%, var(--solvi-light-green) 100%);
         --solvi-gradient-surface: linear-gradient(135deg, var(--solvi-white) 0%, var(--solvi-surface) 50%, var(--solvi-background) 100%);
+        
+        /* Cores para visualização de diferenças */
+        --diff-added: #d4edda;
+        --diff-added-border: #28a745;
+        --diff-added-text: #155724;
+        --diff-removed: #f8d7da;
+        --diff-removed-border: #dc3545;
+        --diff-removed-text: #721c24;
+        --diff-modified: #fff3cd;
+        --diff-modified-border: #ffc107;
+        --diff-modified-text: #856404;
+        --diff-unchanged: #f8f9fa;
+        --diff-unchanged-border: #dee2e6;
+        --diff-unchanged-text: #495057;
     }
     
     /* Header Masterpiece - Largura total e impacto visual máximo */
@@ -194,7 +210,7 @@ st.markdown("""
         flex: 1;
     }
     
-    /* Logo  com Background Verde Escuro */
+    /* Logo Premium com Background Verde Escuro */
     .solvi-logo {
         height: 80px;
         width: auto;
@@ -266,7 +282,360 @@ st.markdown("""
         border-color: rgba(255,255,255,0.4);
     }
     
-    /* Seção de imagens inspiracionais  */
+    /* VISUALIZAÇÃO AVANÇADA DE DIFERENÇAS - PREMIUM */
+    .diff-viewer {
+        background: var(--solvi-white);
+        border-radius: 20px;
+        border: 3px solid var(--solvi-background);
+        box-shadow: 0 15px 50px var(--solvi-shadow);
+        margin: 3rem 0;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .diff-viewer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--solvi-gradient-primary);
+        z-index: 1;
+    }
+    
+    .diff-header {
+        background: var(--solvi-gradient-surface);
+        padding: 2rem 3rem;
+        border-bottom: 3px solid var(--solvi-background);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+    
+    .diff-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--solvi-text-dark);
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+    }
+    
+    .diff-stats {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .diff-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        border: 2px solid;
+        transition: all 0.3s ease;
+    }
+    
+    .diff-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .diff-stat.added {
+        background: var(--diff-added);
+        border-color: var(--diff-added-border);
+        color: var(--diff-added-text);
+    }
+    
+    .diff-stat.removed {
+        background: var(--diff-removed);
+        border-color: var(--diff-removed-border);
+        color: var(--diff-removed-text);
+    }
+    
+    .diff-stat.modified {
+        background: var(--diff-modified);
+        border-color: var(--diff-modified-border);
+        color: var(--diff-modified-text);
+    }
+    
+    .diff-content {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 0;
+    }
+    
+    .diff-line {
+        display: flex;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .diff-line:hover {
+        background: rgba(0,0,0,0.02);
+    }
+    
+    .diff-line-number {
+        width: 80px;
+        padding: 0.8rem 1rem;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        text-align: center;
+        font-weight: 600;
+        color: #6c757d;
+        user-select: none;
+        flex-shrink: 0;
+    }
+    
+    .diff-line-content {
+        flex: 1;
+        padding: 0.8rem 1.5rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        position: relative;
+    }
+    
+    /* Tipos de diferenças */
+    .diff-line.added {
+        background: var(--diff-added);
+        border-left: 4px solid var(--diff-added-border);
+    }
+    
+    .diff-line.added .diff-line-number {
+        background: var(--diff-added);
+        color: var(--diff-added-text);
+        font-weight: 800;
+    }
+    
+    .diff-line.added .diff-line-content {
+        color: var(--diff-added-text);
+        font-weight: 600;
+    }
+    
+    .diff-line.added::before {
+        content: '+';
+        position: absolute;
+        left: 85px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--diff-added-border);
+        font-weight: 900;
+        font-size: 1.2rem;
+        z-index: 1;
+    }
+    
+    .diff-line.removed {
+        background: var(--diff-removed);
+        border-left: 4px solid var(--diff-removed-border);
+    }
+    
+    .diff-line.removed .diff-line-number {
+        background: var(--diff-removed);
+        color: var(--diff-removed-text);
+        font-weight: 800;
+    }
+    
+    .diff-line.removed .diff-line-content {
+        color: var(--diff-removed-text);
+        font-weight: 600;
+        text-decoration: line-through;
+        opacity: 0.8;
+    }
+    
+    .diff-line.removed::before {
+        content: '-';
+        position: absolute;
+        left: 85px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--diff-removed-border);
+        font-weight: 900;
+        font-size: 1.2rem;
+        z-index: 1;
+    }
+    
+    .diff-line.modified {
+        background: var(--diff-modified);
+        border-left: 4px solid var(--diff-modified-border);
+    }
+    
+    .diff-line.modified .diff-line-number {
+        background: var(--diff-modified);
+        color: var(--diff-modified-text);
+        font-weight: 800;
+    }
+    
+    .diff-line.modified .diff-line-content {
+        color: var(--diff-modified-text);
+        font-weight: 600;
+    }
+    
+    .diff-line.modified::before {
+        content: '~';
+        position: absolute;
+        left: 85px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--diff-modified-border);
+        font-weight: 900;
+        font-size: 1.2rem;
+        z-index: 1;
+    }
+    
+    .diff-line.unchanged {
+        background: var(--diff-unchanged);
+    }
+    
+    .diff-line.unchanged .diff-line-number {
+        background: var(--diff-unchanged);
+        color: var(--diff-unchanged-text);
+    }
+    
+    .diff-line.unchanged .diff-line-content {
+        color: var(--diff-unchanged-text);
+        opacity: 0.7;
+    }
+    
+    /* Highlights dentro do texto */
+    .diff-highlight {
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .diff-highlight.added {
+        background: #28a745;
+        color: white;
+    }
+    
+    .diff-highlight.removed {
+        background: #dc3545;
+        color: white;
+        text-decoration: line-through;
+    }
+    
+    .diff-highlight.modified {
+        background: #ffc107;
+        color: #856404;
+    }
+    
+    /* Seção de resumo visual */
+    .diff-summary {
+        background: var(--solvi-gradient-surface);
+        padding: 3rem;
+        border-top: 3px solid var(--solvi-background);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+    
+    .diff-summary-item {
+        background: var(--solvi-white);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 2px solid var(--solvi-background);
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .diff-summary-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-color: var(--solvi-light-green);
+    }
+    
+    .diff-summary-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .diff-summary-value {
+        font-size: 2.5rem;
+        font-weight: 900;
+        font-family: 'Poppins', sans-serif;
+        margin-bottom: 0.5rem;
+        background: var(--solvi-gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .diff-summary-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #666;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Controles de visualização */
+    .diff-controls {
+        background: var(--solvi-gradient-surface);
+        padding: 2rem 3rem;
+        border-bottom: 3px solid var(--solvi-background);
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .diff-control-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .diff-control-label {
+        font-weight: 600;
+        color: var(--solvi-text-dark);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+    }
+    
+    .diff-toggle {
+        display: flex;
+        background: var(--solvi-white);
+        border-radius: 8px;
+        border: 2px solid var(--solvi-background);
+        overflow: hidden;
+    }
+    
+    .diff-toggle-btn {
+        padding: 0.6rem 1.2rem;
+        border: none;
+        background: transparent;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #666;
+    }
+    
+    .diff-toggle-btn.active {
+        background: var(--solvi-primary-green);
+        color: white;
+    }
+    
+    .diff-toggle-btn:hover:not(.active) {
+        background: var(--solvi-surface);
+    }
+    
+    /* Seção de imagens inspiracionais premium */
     .solvi-inspiration {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -346,7 +715,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Navegação  estilo Solví */
+    /* Navegação premium estilo Solví */
     .solvi-navigation {
         background: var(--solvi-gradient-surface);
         border-radius: 24px;
@@ -369,7 +738,7 @@ st.markdown("""
         z-index: 1;
     }
     
-    /* Cards  estilo Solví */
+    /* Cards premium estilo Solví */
     .solvi-card {
         background: var(--solvi-gradient-surface);
         border-radius: 28px;
@@ -438,7 +807,7 @@ st.markdown("""
         line-height: 1.2;
     }
     
-    /* Métricas  estilo Solví */
+    /* Métricas premium estilo Solví */
     .solvi-metrics {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -498,7 +867,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Botões  estilo Solví */
+    /* Botões premium estilo Solví */
     .stButton > button {
         background: var(--solvi-gradient-primary);
         color: var(--solvi-text-light);
@@ -539,7 +908,7 @@ st.markdown("""
         border-color: var(--solvi-white);
     }
     
-    /* Alertas  estilo Solví */
+    /* Alertas premium estilo Solví */
     .solvi-alert {
         border-radius: 24px;
         padding: 3rem 3.5rem;
@@ -578,7 +947,7 @@ st.markdown("""
         color: #0d47a1;
     }
     
-    /* Upload areas  com pontilhado contínuo */
+    /* Upload areas premium com pontilhado contínuo */
     .solvi-upload {
         border: 5px dashed var(--solvi-light-green);
         border-radius: 28px;
@@ -592,7 +961,7 @@ st.markdown("""
         overflow: hidden;
     }
     
-    /* Pontilhado contínuo animado  */
+    /* Pontilhado contínuo animado premium */
     .solvi-upload::before {
         content: '';
         position: absolute;
@@ -667,7 +1036,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Footer  */
+    /* Footer premium */
     .solvi-footer {
         background: var(--solvi-gradient-primary);
         color: var(--solvi-text-light);
@@ -715,7 +1084,7 @@ st.markdown("""
         box-shadow: 0 12px 35px rgba(0,0,0,0.4);
     }
     
-    /* SIDEBAR  STYLING */
+    /* SIDEBAR PREMIUM STYLING */
     .sidebar-content {
         background: var(--solvi-gradient-surface);
         border-radius: 20px;
@@ -736,7 +1105,7 @@ st.markdown("""
         padding-bottom: 1rem;
     }
     
-    /* Responsividade  */
+    /* Responsividade premium */
     @media (max-width: 768px) {
         .solvi-header {
             padding: 2.5rem 0;
@@ -799,9 +1168,30 @@ st.markdown("""
             min-width: 18rem !important;
             padding: 1.5rem 1rem !important;
         }
+        
+        /* Diff viewer responsivo */
+        .diff-line-number {
+            width: 60px;
+            font-size: 0.8rem;
+        }
+        
+        .diff-line-content {
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+        }
+        
+        .diff-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .diff-controls {
+            flex-direction: column;
+            gap: 1rem;
+        }
     }
     
-    /* Animações  */
+    /* Animações premium */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -831,7 +1221,7 @@ st.markdown("""
         }
     }
     
-    .solvi-card, .solvi-metric, .solvi-inspiration-item {
+    .solvi-card, .solvi-metric, .solvi-inspiration-item, .diff-viewer {
         animation: fadeInUp 0.8s ease-out;
     }
     
@@ -843,7 +1233,7 @@ st.markdown("""
         animation: float 6s ease-in-out infinite;
     }
     
-    /* Scrollbar  personalizada */
+    /* Scrollbar premium personalizada */
     ::-webkit-scrollbar {
         width: 14px;
     }
@@ -863,7 +1253,7 @@ st.markdown("""
         background: linear-gradient(135deg, var(--solvi-dark-green) 0%, var(--solvi-primary-green) 100%);
     }
     
-    /* Efeitos especiais  */
+    /* Efeitos especiais premium */
     .solvi-glow {
         box-shadow: 0 0 20px var(--solvi-accent-green);
     }
@@ -887,23 +1277,25 @@ st.markdown("""
 
 # Inicializar session state
 def init_session_state():
-    """Inicializa o estado da sessão com configurações """
+    """Inicializa o estado da sessão com configurações premium"""
     if 'current_tab' not in st.session_state:
-        st.session_state.current_tab = 'cvm'
+        st.session_state.current_tab = 'comparison'  # Inicia com comparação para mostrar a nova funcionalidade
     if 'analysis_results' not in st.session_state:
         st.session_state.analysis_results = None
     if 'comparison_results' not in st.session_state:
         st.session_state.comparison_results = None
+    if 'visual_diff_data' not in st.session_state:
+        st.session_state.visual_diff_data = None
 
 class FREAnalyzer:
-    """Classe  para análise de FRE vs Normas CVM"""
+    """Classe premium para análise de FRE vs Normas CVM"""
     
     def __init__(self, api_key):
         openai.api_key = api_key
         self.client = openai.OpenAI(api_key=api_key)
         
     def extract_text_from_pdf(self, pdf_file):
-        """Extrai texto de arquivo PDF com tratamento """
+        """Extrai texto de arquivo PDF com tratamento premium"""
         try:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ""
@@ -915,7 +1307,7 @@ class FREAnalyzer:
             return ""
     
     def extract_text_from_docx(self, docx_file):
-        """Extrai texto de arquivo Word com tratamento """
+        """Extrai texto de arquivo Word com tratamento premium"""
         try:
             doc = docx.Document(docx_file)
             text = ""
@@ -941,7 +1333,7 @@ class FREAnalyzer:
         """Analisa uma seção específica do FRE contra as normas CVM"""
         
         prompt = f"""
-        Você é um especialista  em regulamentação CVM e análise de Formulários de Referência (FRE).
+        Você é um especialista premium em regulamentação CVM e análise de Formulários de Referência (FRE).
         
         Analise a seção "{section_name}" do FRE fornecido contra as normas e orientações CVM.
         
@@ -1068,14 +1460,14 @@ class FREAnalyzer:
         
         return sections
 
-class DocumentComparator:
-    """Classe  para comparação de documentos"""
+class AdvancedDocumentComparator:
+    """Classe premium para comparação avançada de documentos com visualização"""
     
     def __init__(self):
         self.texto_ref = []
         self.texto_novo = []
         self.diferencas = []
-        self.diferencas_detalhadas = []
+        self.visual_diff_data = []
         
     def detectar_tipo_arquivo(self, nome_arquivo: str) -> str:
         """Detecta o tipo do arquivo baseado na extensão"""
@@ -1152,8 +1544,8 @@ class DocumentComparator:
             st.error(f"❌ Erro ao extrair texto do Word: {str(e)}")
             return []
     
-    def normalizar_texto(self, texto: str) -> str:
-        """Normaliza o texto removendo variações que não são alterações reais"""
+    def normalizar_texto_avancado(self, texto: str) -> str:
+        """Normalização avançada de texto para comparação mais precisa"""
         # Remover espaços extras e quebras de linha desnecessárias
         texto = re.sub(r'\s+', ' ', texto.strip())
         
@@ -1162,106 +1554,194 @@ class DocumentComparator:
         
         # Normalizar pontuação
         texto = re.sub(r'\s+([,.;:!?])', r'\1', texto)
+        texto = re.sub(r'([,.;:!?])\s*', r'\1 ', texto)
         
         # Normalizar aspas e caracteres especiais
         texto = re.sub(r'["""]', '"', texto)
         texto = re.sub(r"[''']", "'", texto)
         texto = re.sub(r'[–—]', '-', texto)
+        texto = re.sub(r'[…]', '...', texto)
         
-        return texto
+        # Normalizar números e datas
+        texto = re.sub(r'(\d+)\.(\d+)', r'\1,\2', texto)  # 1.000 -> 1,000
+        texto = re.sub(r'(\d+)/(\d+)/(\d+)', r'\1-\2-\3', texto)  # 01/01/2024 -> 01-01-2024
+        
+        # Normalizar abreviações comuns
+        abreviacoes = {
+            r'\bSr\.\s*': 'Senhor ',
+            r'\bSra\.\s*': 'Senhora ',
+            r'\bDr\.\s*': 'Doutor ',
+            r'\bDra\.\s*': 'Doutora ',
+            r'\betc\.\s*': 'etcetera ',
+            r'\bex\.\s*': 'exemplo ',
+            r'\bp\.\s*ex\.\s*': 'por exemplo ',
+        }
+        
+        for padrao, substituicao in abreviacoes.items():
+            texto = re.sub(padrao, substituicao, texto, flags=re.IGNORECASE)
+        
+        return texto.strip()
     
-    def dividir_em_paragrafos(self, texto: str) -> List[str]:
-        """Divide o texto em parágrafos de forma inteligente"""
+    def dividir_em_sentencas_inteligente(self, texto: str) -> List[str]:
+        """Divide o texto em sentenças de forma mais inteligente"""
         # Normalizar o texto primeiro
-        texto = self.normalizar_texto(texto)
+        texto = self.normalizar_texto_avancado(texto)
         
-        # Dividir por quebras de linha duplas primeiro
-        paragrafos_brutos = re.split(r'\n\s*\n', texto)
-        paragrafos = []
+        # Padrões para identificar fim de sentença
+        # Evita quebrar em abreviações comuns
+        sentencas = re.split(r'(?<!\b(?:Sr|Sra|Dr|Dra|etc|ex|p\.ex)\.)(?<!\d)\.(?!\d)\s+(?=[A-Z])', texto)
         
-        for paragrafo in paragrafos_brutos:
-            paragrafo = paragrafo.strip()
-            if paragrafo:
-                # Se o parágrafo for muito longo, dividir por frases
-                if len(paragrafo) > 500:
-                    frases = re.split(r'(?<!\d)\.(?!\d)\s+', paragrafo)
-                    for frase in frases:
-                        frase = self.normalizar_texto(frase.strip())
-                        if frase and len(frase) > 10:
-                            paragrafos.append(frase)
-                else:
-                    paragrafo_normalizado = self.normalizar_texto(paragrafo)
-                    if paragrafo_normalizado and len(paragrafo_normalizado) > 10:
-                        paragrafos.append(paragrafo_normalizado)
+        sentencas_limpas = []
+        for sentenca in sentencas:
+            sentenca = sentenca.strip()
+            if sentenca and len(sentenca) > 15:  # Filtrar sentenças muito curtas
+                sentencas_limpas.append(sentenca)
         
-        return paragrafos
+        return sentencas_limpas
     
-    def calcular_similaridade(self, texto1: str, texto2: str) -> float:
-        """Calcula a similaridade entre dois textos"""
+    def calcular_similaridade_avancada(self, texto1: str, texto2: str) -> float:
+        """Calcula similaridade usando múltiplos algoritmos"""
         if not texto1 and not texto2:
             return 1.0
         if not texto1 or not texto2:
             return 0.0
         
-        texto1_norm = self.normalizar_texto(texto1)
-        texto2_norm = self.normalizar_texto(texto2)
+        texto1_norm = self.normalizar_texto_avancado(texto1)
+        texto2_norm = self.normalizar_texto_avancado(texto2)
         
+        # Similaridade por sequência
         matcher = difflib.SequenceMatcher(None, texto1_norm, texto2_norm)
-        return matcher.ratio()
+        sim_sequencia = matcher.ratio()
+        
+        # Similaridade por palavras
+        palavras1 = set(texto1_norm.lower().split())
+        palavras2 = set(texto2_norm.lower().split())
+        
+        if palavras1 or palavras2:
+            intersecao = len(palavras1.intersection(palavras2))
+            uniao = len(palavras1.union(palavras2))
+            sim_palavras = intersecao / uniao if uniao > 0 else 0
+        else:
+            sim_palavras = 1.0
+        
+        # Média ponderada das similaridades
+        similaridade_final = (sim_sequencia * 0.7) + (sim_palavras * 0.3)
+        
+        return similaridade_final
     
-    def encontrar_alteracoes_reais(self, paragrafos_ref: List[str], paragrafos_novo: List[str]) -> List[Dict]:
-        """Encontra apenas alterações reais de conteúdo"""
+    def gerar_diff_visual_linha_por_linha(self, texto_ref: str, texto_novo: str) -> List[Dict]:
+        """Gera diferenças visuais linha por linha para exibição"""
+        linhas_ref = texto_ref.split('\n')
+        linhas_novo = texto_novo.split('\n')
+        
+        # Usar difflib para comparação linha por linha
+        differ = difflib.unified_diff(
+            linhas_ref, 
+            linhas_novo, 
+            fromfile='Documento Original', 
+            tofile='Documento Novo',
+            lineterm=''
+        )
+        
+        diff_lines = []
+        linha_num = 1
+        
+        for line in differ:
+            if line.startswith('@@'):
+                # Cabeçalho de seção - ignorar
+                continue
+            elif line.startswith('---') or line.startswith('+++'):
+                # Cabeçalho de arquivo - ignorar
+                continue
+            elif line.startswith('-'):
+                # Linha removida
+                diff_lines.append({
+                    'numero': linha_num,
+                    'tipo': 'removed',
+                    'conteudo': line[1:],  # Remove o prefixo '-'
+                    'conteudo_original': line[1:],
+                    'conteudo_novo': ''
+                })
+                linha_num += 1
+            elif line.startswith('+'):
+                # Linha adicionada
+                diff_lines.append({
+                    'numero': linha_num,
+                    'tipo': 'added',
+                    'conteudo': line[1:],  # Remove o prefixo '+'
+                    'conteudo_original': '',
+                    'conteudo_novo': line[1:]
+                })
+                linha_num += 1
+            elif line.startswith(' '):
+                # Linha inalterada
+                diff_lines.append({
+                    'numero': linha_num,
+                    'tipo': 'unchanged',
+                    'conteudo': line[1:],  # Remove o prefixo ' '
+                    'conteudo_original': line[1:],
+                    'conteudo_novo': line[1:]
+                })
+                linha_num += 1
+        
+        return diff_lines
+    
+    def encontrar_alteracoes_avancadas(self, sentencas_ref: List[str], sentencas_novo: List[str]) -> List[Dict]:
+        """Encontra alterações usando algoritmo avançado"""
         alteracoes = []
         
-        # Criar conjuntos de parágrafos únicos
-        set_ref = set(paragrafos_ref)
-        set_novo = set(paragrafos_novo)
+        # Criar conjuntos de sentenças únicas
+        set_ref = set(sentencas_ref)
+        set_novo = set(sentencas_novo)
         
-        # Encontrar parágrafos removidos e adicionados
-        paragrafos_removidos = set_ref - set_novo
-        paragrafos_adicionados = set_novo - set_ref
+        # Encontrar sentenças removidas e adicionadas
+        sentencas_removidas = set_ref - set_novo
+        sentencas_adicionadas = set_novo - set_ref
         
-        # Verificar modificações
-        paragrafos_modificados = []
+        # Verificar modificações usando similaridade avançada
+        sentencas_modificadas = []
         
-        for p_ref in paragrafos_removidos.copy():
+        for s_ref in sentencas_removidas.copy():
             melhor_match = None
             melhor_similaridade = 0.0
             
-            for p_novo in paragrafos_adicionados:
-                similaridade = self.calcular_similaridade(p_ref, p_novo)
+            for s_novo in sentencas_adicionadas:
+                similaridade = self.calcular_similaridade_avancada(s_ref, s_novo)
                 
-                if similaridade > 0.6 and similaridade > melhor_similaridade:
-                    melhor_match = p_novo
+                # Threshold mais baixo para detectar mais modificações
+                if similaridade > 0.4 and similaridade > melhor_similaridade:
+                    melhor_match = s_novo
                     melhor_similaridade = similaridade
             
-            if melhor_match and melhor_similaridade > 0.6:
-                paragrafos_modificados.append({
-                    'original': p_ref,
+            if melhor_match and melhor_similaridade > 0.4:
+                sentencas_modificadas.append({
+                    'original': s_ref,
                     'novo': melhor_match,
                     'similaridade': melhor_similaridade
                 })
-                paragrafos_removidos.discard(p_ref)
-                paragrafos_adicionados.discard(melhor_match)
+                sentencas_removidas.discard(s_ref)
+                sentencas_adicionadas.discard(melhor_match)
         
         # Adicionar alterações
-        for paragrafo in paragrafos_removidos:
+        for sentenca in sentencas_removidas:
             alteracoes.append({
                 'tipo': 'removido',
-                'texto': paragrafo,
-                'texto_original': paragrafo,
-                'texto_novo': ''
+                'texto': sentenca,
+                'texto_original': sentenca,
+                'texto_novo': '',
+                'similaridade': 0.0
             })
         
-        for paragrafo in paragrafos_adicionados:
+        for sentenca in sentencas_adicionadas:
             alteracoes.append({
                 'tipo': 'adicionado',
-                'texto': paragrafo,
+                'texto': sentenca,
                 'texto_original': '',
-                'texto_novo': paragrafo
+                'texto_novo': sentenca,
+                'similaridade': 0.0
             })
         
-        for mod in paragrafos_modificados:
+        for mod in sentencas_modificadas:
             alteracoes.append({
                 'tipo': 'modificado',
                 'texto': f"ANTES: {mod['original']}\nDEPOIS: {mod['novo']}",
@@ -1292,7 +1772,7 @@ def render_header():
     """, unsafe_allow_html=True)
 
 def render_inspiration_section():
-    """Renderiza seção de imagens inspiracionais """
+    """Renderiza seção de imagens inspiracionais premium"""
     st.markdown("""
     <div class="solvi-inspiration">
         <div class="solvi-inspiration-item">
@@ -1327,7 +1807,7 @@ def render_inspiration_section():
     """, unsafe_allow_html=True)
 
 def render_navigation():
-    """Renderiza a navegação  por abas"""
+    """Renderiza a navegação premium por abas"""
     st.markdown('<div class="solvi-navigation">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -1338,14 +1818,126 @@ def render_navigation():
             st.rerun()
     
     with col2:
-        if st.button("📚 Comparação de Documentos", key="tab_comparison", use_container_width=True):
+        if st.button("📚 Comparação Visual de Documentos", key="tab_comparison", use_container_width=True):
             st.session_state.current_tab = 'comparison'
             st.rerun()
     
     st.markdown("</div>", unsafe_allow_html=True)
 
+def render_visual_diff_viewer(diff_data: List[Dict], arquivo_ref: str, arquivo_novo: str):
+    """Renderiza o visualizador avançado de diferenças"""
+    
+    # Calcular estatísticas
+    total_lines = len(diff_data)
+    added_lines = len([d for d in diff_data if d['tipo'] == 'added'])
+    removed_lines = len([d for d in diff_data if d['tipo'] == 'removed'])
+    modified_lines = len([d for d in diff_data if d['tipo'] == 'modified'])
+    unchanged_lines = total_lines - added_lines - removed_lines - modified_lines
+    
+    # HTML do visualizador
+    diff_html = f"""
+    <div class="diff-viewer">
+        <div class="diff-header">
+            <h3 class="diff-title">📊 Comparação Visual: {arquivo_ref} ↔ {arquivo_novo}</h3>
+            <div class="diff-stats">
+                <div class="diff-stat added">
+                    <span>+</span>
+                    <span>{added_lines} Adições</span>
+                </div>
+                <div class="diff-stat removed">
+                    <span>-</span>
+                    <span>{removed_lines} Remoções</span>
+                </div>
+                <div class="diff-stat modified">
+                    <span>~</span>
+                    <span>{modified_lines} Modificações</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="diff-controls">
+            <div class="diff-control-group">
+                <span class="diff-control-label">Visualizar:</span>
+                <div class="diff-toggle">
+                    <button class="diff-toggle-btn active">Todas as Alterações</button>
+                    <button class="diff-toggle-btn">Apenas Diferenças</button>
+                </div>
+            </div>
+            <div class="diff-control-group">
+                <span class="diff-control-label">Modo:</span>
+                <div class="diff-toggle">
+                    <button class="diff-toggle-btn active">Lado a Lado</button>
+                    <button class="diff-toggle-btn">Unificado</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="diff-content">
+    """
+    
+    # Adicionar linhas de diferença
+    for i, line_data in enumerate(diff_data[:100]):  # Limitar a 100 linhas para performance
+        tipo = line_data['tipo']
+        numero = line_data['numero']
+        conteudo = html.escape(line_data['conteudo'][:200])  # Limitar tamanho da linha
+        
+        diff_html += f"""
+            <div class="diff-line {tipo}">
+                <div class="diff-line-number">{numero}</div>
+                <div class="diff-line-content">{conteudo}</div>
+            </div>
+        """
+    
+    if len(diff_data) > 100:
+        diff_html += f"""
+            <div class="diff-line unchanged">
+                <div class="diff-line-number">...</div>
+                <div class="diff-line-content">... e mais {len(diff_data) - 100} linhas</div>
+            </div>
+        """
+    
+    diff_html += """
+        </div>
+        
+        <div class="diff-summary">
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">📊</span>
+                <div class="diff-summary-value">""" + str(total_lines) + """</div>
+                <div class="diff-summary-label">Total de Linhas</div>
+            </div>
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">✅</span>
+                <div class="diff-summary-value">""" + str(unchanged_lines) + """</div>
+                <div class="diff-summary-label">Inalteradas</div>
+            </div>
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">➕</span>
+                <div class="diff-summary-value">""" + str(added_lines) + """</div>
+                <div class="diff-summary-label">Adicionadas</div>
+            </div>
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">➖</span>
+                <div class="diff-summary-value">""" + str(removed_lines) + """</div>
+                <div class="diff-summary-label">Removidas</div>
+            </div>
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">🔄</span>
+                <div class="diff-summary-value">""" + str(modified_lines) + """</div>
+                <div class="diff-summary-label">Modificadas</div>
+            </div>
+            <div class="diff-summary-item">
+                <span class="diff-summary-icon">📈</span>
+                <div class="diff-summary-value">""" + f"{((added_lines + removed_lines + modified_lines) / total_lines * 100):.1f}%" + """</div>
+                <div class="diff-summary-label">Taxa de Mudança</div>
+            </div>
+        </div>
+    </div>
+    """
+    
+    st.markdown(diff_html, unsafe_allow_html=True)
+
 def render_cvm_analysis():
-    """Renderiza a interface  de análise CVM com SIDEBAR CORRIGIDA"""
+    """Renderiza a interface premium de análise CVM com SIDEBAR CORRIGIDA"""
     st.markdown("""
     <div class="solvi-card">
         <div class="solvi-card-header">
@@ -1353,30 +1945,30 @@ def render_cvm_analysis():
             <h2 class="solvi-card-title">Análise FRE vs Normas CVM</h2>
         </div>
         <p style="color: #666; font-size: 1.4rem; line-height: 1.8; font-weight: 500; font-family: 'Inter', sans-serif;">
-            Análise automatizada  de Formulários de Referência contra normas CVM com identificação 
+            Análise automatizada premium de Formulários de Referência contra normas CVM com identificação 
             inteligente de não conformidades e geração de relatórios detalhados com base legal específica 
             e recomendações de melhoria personalizadas.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # SIDEBAR  CORRIGIDA - SEMPRE VISÍVEL
+    # SIDEBAR PREMIUM CORRIGIDA - SEMPRE VISÍVEL
     with st.sidebar:
         st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
-        st.markdown('<h3 class="sidebar-title">⚙️ Configurações </h3>', unsafe_allow_html=True)
+        st.markdown('<h3 class="sidebar-title">⚙️ Configurações Premium</h3>', unsafe_allow_html=True)
         
         # Campo obrigatório para API Key
         api_key = st.text_input(
             "🔑 Chave API OpenAI *",
             type="password",
-            help="Insira sua chave API da OpenAI (obrigatório para análise )"
+            help="Insira sua chave API da OpenAI (obrigatório para análise premium)"
         )
         
         if not api_key:
             st.markdown("""
             <div class="solvi-alert error">
                 ⚠️ <strong>Chave API OpenAI é obrigatória!</strong><br>
-                Configure sua chave para utilizar a análise CVM  com IA avançada.
+                Configure sua chave para utilizar a análise CVM premium com IA avançada.
             </div>
             """, unsafe_allow_html=True)
         
@@ -1387,7 +1979,7 @@ def render_cvm_analysis():
         fre_file = st.file_uploader(
             "Upload do Formulário de Referência",
             type=['pdf', 'docx'],
-            help="Faça upload do FRE para análise "
+            help="Faça upload do FRE para análise premium"
         )
         
         st.markdown("---")
@@ -1402,19 +1994,19 @@ def render_cvm_analysis():
         )
         
         if len(cvm_files) > 5:
-            st.error("⚠️ Máximo de 5 documentos CVM permitidos para análise !")
+            st.error("⚠️ Máximo de 5 documentos CVM permitidos para análise premium!")
             cvm_files = cvm_files[:5]
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Área principal 
+    # Área principal premium
     if not api_key:
         st.markdown("""
         <div class="solvi-upload">
             <div class="solvi-upload-icon">🔑</div>
             <div class="solvi-upload-text">Configure sua API Key OpenAI</div>
             <div class="solvi-upload-subtext">
-                Para utilizar a análise CVM , você precisa configurar sua chave API OpenAI na barra lateral.<br>
+                Para utilizar a análise CVM premium, você precisa configurar sua chave API OpenAI na barra lateral.<br>
                 A chave é necessária para processar documentos com inteligência artificial avançada.
             </div>
         </div>
@@ -1425,12 +2017,12 @@ def render_cvm_analysis():
         st.markdown("""
         <div class="solvi-upload">
             <div class="solvi-upload-icon">📄</div>
-            <div class="solvi-upload-text">Como usar a Análise CVM </div>
+            <div class="solvi-upload-text">Como usar a Análise CVM Premium</div>
             <div class="solvi-upload-subtext">
                 1. Configure sua API Key OpenAI na barra lateral<br>
                 2. Faça upload do FRE (Formulário de Referência)<br>
                 3. Adicione documentos CVM para comparação avançada<br>
-                4. Execute a análise  e receba relatório detalhado<br>
+                4. Execute a análise premium e receba relatório detalhado<br>
                 5. Baixe relatórios em PDF com recomendações personalizadas
             </div>
         </div>
@@ -1440,13 +2032,13 @@ def render_cvm_analysis():
     if not cvm_files:
         st.markdown("""
         <div class="solvi-alert warning">
-            ⚠️ <strong>Documentos CVM necessários para análise </strong><br>
+            ⚠️ <strong>Documentos CVM necessários para análise premium</strong><br>
             Adicione pelo menos um documento CVM para realizar a análise comparativa avançada com IA.
         </div>
         """, unsafe_allow_html=True)
         return
     
-    # Informações  dos arquivos carregados
+    # Informações premium dos arquivos carregados
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1454,7 +2046,7 @@ def render_cvm_analysis():
         <div class="solvi-alert success">
             ✅ <strong>FRE Carregado:</strong> {fre_file.name}<br>
             📊 <strong>Tamanho:</strong> {fre_file.size / 1024 / 1024:.2f} MB<br>
-            🎯 <strong>Status:</strong> Pronto para análise 
+            🎯 <strong>Status:</strong> Pronto para análise premium
         </div>
         """, unsafe_allow_html=True)
     
@@ -1467,11 +2059,11 @@ def render_cvm_analysis():
         </div>
         """, unsafe_allow_html=True)
     
-    # Botão de análise 
-    if st.button("🔍 Iniciar Análise CVM ", type="primary", use_container_width=True):
-        with st.spinner("🔄 Processando análise  com IA..."):
+    # Botão de análise premium
+    if st.button("🔍 Iniciar Análise CVM Premium", type="primary", use_container_width=True):
+        with st.spinner("🔄 Processando análise premium com IA..."):
             try:
-                # Inicializar analisador 
+                # Inicializar analisador premium
                 analyzer = FREAnalyzer(api_key)
                 
                 # Extrair texto do FRE
@@ -1497,7 +2089,7 @@ def render_cvm_analysis():
                     st.error("❌ Não foi possível identificar seções no FRE")
                     return
                 
-                # Analisar cada seção com IA 
+                # Analisar cada seção com IA premium
                 progress_bar = st.progress(0)
                 status_text = st.empty()
                 
@@ -1517,31 +2109,31 @@ def render_cvm_analysis():
                     progress_bar.progress((i + 1) / total_sections)
                     time.sleep(0.5)
                 
-                status_text.text("✅ Análise  concluída com sucesso!")
+                status_text.text("✅ Análise premium concluída com sucesso!")
                 progress_bar.empty()
                 status_text.empty()
                 
-                # Salvar resultados 
+                # Salvar resultados premium
                 st.session_state.analysis_results = analysis_results
                 st.session_state.fre_filename = fre_file.name
                 
                 st.markdown("""
                 <div class="solvi-alert success">
-                    ✅ <strong>Análise CVM  concluída com sucesso!</strong><br>
+                    ✅ <strong>Análise CVM Premium concluída com sucesso!</strong><br>
                     Confira os resultados detalhados e insights avançados abaixo.
                 </div>
                 """, unsafe_allow_html=True)
                 
             except Exception as e:
-                st.error(f"❌ Erro durante a análise : {str(e)}")
+                st.error(f"❌ Erro durante a análise premium: {str(e)}")
     
-    # Exibir resultados  se disponíveis
+    # Exibir resultados premium se disponíveis
     if st.session_state.analysis_results:
         analysis_results = st.session_state.analysis_results
         
-        st.markdown("### 📊 Resultados da Análise ")
+        st.markdown("### 📊 Resultados da Análise Premium")
         
-        # Métricas 
+        # Métricas premium
         total_pontos = sum(len(r.get('pontos_atencao', [])) for r in analysis_results)
         criticos = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'CRITICO')
         atencao = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'ATENCAO')
@@ -1568,7 +2160,7 @@ def render_cvm_analysis():
         </div>
         """, unsafe_allow_html=True)
         
-        # Exibir resultados detalhados 
+        # Exibir resultados detalhados premium
         for result in analysis_results:
             with st.expander(f"📑 {result.get('secao', 'Seção não identificada')}", expanded=False):
                 conformidade = result.get('conformidade', 'N/A')
@@ -1594,22 +2186,22 @@ def render_cvm_analysis():
                         st.write("---")
 
 def render_document_comparison():
-    """Renderiza a interface  de comparação de documentos"""
+    """Renderiza a interface premium de comparação visual de documentos"""
     st.markdown("""
     <div class="solvi-card">
         <div class="solvi-card-header">
             <div class="solvi-card-icon">📚</div>
-            <h2 class="solvi-card-title">Comparação Inteligente de Documentos</h2>
+            <h2 class="solvi-card-title">Comparação Visual Avançada de Documentos</h2>
         </div>
         <p style="color: #666; font-size: 1.4rem; line-height: 1.8; font-weight: 500; font-family: 'Inter', sans-serif;">
-            Compare dois documentos (PDF ou Word) com algoritmo  de IA e identifique apenas as alterações 
-            reais de conteúdo, ignorando mudanças de formatação e posicionamento com normalização avançada 
-            e análise semântica inteligente.
+            Compare dois documentos (PDF ou Word) com algoritmo premium de IA e visualize as diferenças 
+            de forma interativa, com destaque visual para adições, remoções e modificações linha por linha, 
+            similar ao GitHub ou Google Docs.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Layout  em colunas para upload
+    # Layout premium em colunas para upload
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1618,7 +2210,7 @@ def render_document_comparison():
             "Escolha o arquivo de referência",
             type=['pdf', 'docx'],
             key="ref_uploader",
-            help="Este será usado como base para comparação "
+            help="Este será usado como base para comparação premium"
         )
         
         if arquivo_ref:
@@ -1627,7 +2219,7 @@ def render_document_comparison():
                 ✅ <strong>Arquivo carregado:</strong> {arquivo_ref.name}<br>
                 📊 <strong>Tamanho:</strong> {arquivo_ref.size / 1024 / 1024:.2f} MB<br>
                 📋 <strong>Tipo:</strong> {arquivo_ref.type.split('/')[-1].upper()}<br>
-                🎯 <strong>Status:</strong> Pronto para análise 
+                🎯 <strong>Status:</strong> Pronto para análise premium
             </div>
             """, unsafe_allow_html=True)
     
@@ -1646,31 +2238,31 @@ def render_document_comparison():
                 ✅ <strong>Arquivo carregado:</strong> {arquivo_novo.name}<br>
                 📊 <strong>Tamanho:</strong> {arquivo_novo.size / 1024 / 1024:.2f} MB<br>
                 📋 <strong>Tipo:</strong> {arquivo_novo.type.split('/')[-1].upper()}<br>
-                🚀 <strong>Análise:</strong> IA avançada habilitada
+                🚀 <strong>Análise:</strong> Visualização avançada habilitada
             </div>
             """, unsafe_allow_html=True)
     
-    # Informações  sobre o algoritmo com pontilhado contínuo
+    # Informações premium sobre o algoritmo com pontilhado contínuo
     if not arquivo_ref or not arquivo_novo:
         st.markdown("""
         <div class="solvi-upload">
-            <div class="solvi-upload-icon">📚</div>
-            <div class="solvi-upload-text">Algoritmo Inteligente de Comparação</div>
+            <div class="solvi-upload-icon">🎨</div>
+            <div class="solvi-upload-text">Visualização Avançada de Diferenças</div>
             <div class="solvi-upload-subtext">
-                ✅ Ignora mudanças de posicionamento e formatação<br>
-                ✅ Foca apenas em alterações reais de conteúdo<br>
-                ✅ Detecta modificações com alta precisão e IA<br>
-                ✅ Normaliza texto para comparação precisa<br>
-                ✅ Análise por similaridade semântica avançada<br>
-                ✅ Relatórios detalhados com insights 
+                ✅ Comparação visual linha por linha como GitHub<br>
+                ✅ Destaque colorido para adições, remoções e modificações<br>
+                ✅ Algoritmo avançado de normalização de texto<br>
+                ✅ Estatísticas detalhadas de alterações<br>
+                ✅ Interface interativa com controles de visualização<br>
+                ✅ Relatórios premium com insights visuais
             </div>
         </div>
         """, unsafe_allow_html=True)
     
-    # Botão de comparação 
+    # Botão de comparação premium
     if arquivo_ref and arquivo_novo:
         # Verificar compatibilidade de tipos
-        comparator = DocumentComparator()
+        comparator = AdvancedDocumentComparator()
         tipo_ref = comparator.detectar_tipo_arquivo(arquivo_ref.name)
         tipo_novo = comparator.detectar_tipo_arquivo(arquivo_novo.name)
         
@@ -1678,145 +2270,152 @@ def render_document_comparison():
             st.markdown(f"""
             <div class="solvi-alert warning">
                 ⚠️ <strong>Tipos diferentes detectados:</strong> {tipo_ref.upper()} vs {tipo_novo.upper()}<br>
-                A comparação  ainda é possível com algoritmo adaptativo, mas pode não ser ideal.
+                A comparação visual ainda é possível com algoritmo adaptativo, mas pode não ser ideal.
             </div>
             """, unsafe_allow_html=True)
         
-        if st.button("🔍 Comparar Documentos ", type="primary", use_container_width=True):
-            with st.spinner("🔄 Processando comparação  com IA..."):
+        if st.button("🎨 Comparar com Visualização Avançada", type="primary", use_container_width=True):
+            with st.spinner("🔄 Processando comparação visual premium..."):
                 try:
-                    # Extrair textos 
+                    # Extrair textos premium
                     ref_bytes = arquivo_ref.read()
                     novo_bytes = arquivo_novo.read()
                     
                     if tipo_ref == 'pdf':
-                        texto_ref = comparator.extrair_texto_pdf(ref_bytes)
+                        texto_ref_pages = comparator.extrair_texto_pdf(ref_bytes)
                     else:
-                        texto_ref = comparator.extrair_texto_word(ref_bytes)
+                        texto_ref_pages = comparator.extrair_texto_word(ref_bytes)
                     
                     if tipo_novo == 'pdf':
-                        texto_novo = comparator.extrair_texto_pdf(novo_bytes)
+                        texto_novo_pages = comparator.extrair_texto_pdf(novo_bytes)
                     else:
-                        texto_novo = comparator.extrair_texto_word(novo_bytes)
+                        texto_novo_pages = comparator.extrair_texto_word(novo_bytes)
                     
-                    if not texto_ref or not texto_novo:
+                    if not texto_ref_pages or not texto_novo_pages:
                         st.error("❌ Erro ao extrair texto dos documentos")
                         return
                     
-                    # Comparar textos com algoritmo 
-                    diferencas_simples = []
+                    # Combinar todas as páginas em um texto único
+                    texto_ref_completo = '\n'.join(texto_ref_pages)
+                    texto_novo_completo = '\n'.join(texto_novo_pages)
                     
-                    max_paginas = max(len(texto_ref), len(texto_novo))
+                    # Gerar diferenças visuais linha por linha
                     progress_bar = st.progress(0)
                     status_text = st.empty()
                     
-                    for i in range(max_paginas):
-                        status_text.text(f"🤖 Analisando com IA página/seção {i+1} de {max_paginas}")
-                        
-                        ref = texto_ref[i] if i < len(texto_ref) else ""
-                        novo = texto_novo[i] if i < len(texto_novo) else ""
-                        
-                        paragrafos_ref = comparator.dividir_em_paragrafos(ref)
-                        paragrafos_novo = comparator.dividir_em_paragrafos(novo)
-                        
-                        alteracoes = comparator.encontrar_alteracoes_reais(paragrafos_ref, paragrafos_novo)
-                        
-                        if alteracoes:
-                            for j, alteracao in enumerate(alteracoes):
-                                tipo_mapeado = {
-                                    'removido': 'Removido',
-                                    'adicionado': 'Adicionado',
-                                    'modificado': 'Modificado'
-                                }[alteracao['tipo']]
-                                
-                                diferencas_simples.append({
-                                    'pagina': i + 1,
-                                    'paragrafo': j + 1,
-                                    'tipo': tipo_mapeado,
-                                    'conteudo_original': alteracao['texto_original'],
-                                    'conteudo_novo': alteracao['texto_novo']
-                                })
-                        
-                        progress_bar.progress((i + 1) / max_paginas)
+                    status_text.text("🎨 Gerando visualização linha por linha...")
+                    progress_bar.progress(0.3)
                     
+                    diff_visual = comparator.gerar_diff_visual_linha_por_linha(
+                        texto_ref_completo, texto_novo_completo
+                    )
+                    
+                    progress_bar.progress(0.6)
+                    status_text.text("📊 Calculando estatísticas avançadas...")
+                    
+                    # Comparar textos com algoritmo avançado para estatísticas
+                    sentencas_ref = comparator.dividir_em_sentencas_inteligente(texto_ref_completo)
+                    sentencas_novo = comparator.dividir_em_sentencas_inteligente(texto_novo_completo)
+                    
+                    alteracoes_avancadas = comparator.encontrar_alteracoes_avancadas(
+                        sentencas_ref, sentencas_novo
+                    )
+                    
+                    progress_bar.progress(1.0)
+                    status_text.text("✅ Visualização premium concluída!")
+                    
+                    time.sleep(0.5)
                     progress_bar.empty()
                     status_text.empty()
                     
-                    # Salvar resultados 
+                    # Salvar resultados premium
+                    st.session_state.visual_diff_data = diff_visual
                     st.session_state.comparison_results = {
-                        'diferencas': diferencas_simples,
+                        'diferencas': alteracoes_avancadas,
                         'arquivo_ref': arquivo_ref.name,
-                        'arquivo_novo': arquivo_novo.name
+                        'arquivo_novo': arquivo_novo.name,
+                        'diff_visual': diff_visual
                     }
                     
                     st.markdown("""
                     <div class="solvi-alert success">
-                        ✅ <strong>Comparação  concluída com sucesso!</strong><br>
-                        Confira os resultados detalhados e insights avançados abaixo.
+                        ✅ <strong>Comparação visual premium concluída com sucesso!</strong><br>
+                        Confira a visualização avançada e insights detalhados abaixo.
                     </div>
                     """, unsafe_allow_html=True)
                     
                 except Exception as e:
-                    st.error(f"❌ Erro durante a comparação : {str(e)}")
+                    st.error(f"❌ Erro durante a comparação visual: {str(e)}")
     
-    # Exibir resultados  se disponíveis
-    if st.session_state.comparison_results:
-        results = st.session_state.comparison_results
-        diferencas = results['diferencas']
+    # Exibir visualização premium se disponível
+    if st.session_state.visual_diff_data:
+        st.markdown("### 🎨 Visualização Avançada de Diferenças")
         
-        st.markdown("### 📊 Resultados da Comparação ")
+        # Renderizar o visualizador premium
+        render_visual_diff_viewer(
+            st.session_state.visual_diff_data,
+            st.session_state.comparison_results['arquivo_ref'],
+            st.session_state.comparison_results['arquivo_novo']
+        )
         
-        # Métricas 
-        total_diferencas = len(diferencas)
-        adicionados = len([d for d in diferencas if d['tipo'] == 'Adicionado'])
-        removidos = len([d for d in diferencas if d['tipo'] == 'Removido'])
-        modificados = len([d for d in diferencas if d['tipo'] == 'Modificado'])
-        
-        st.markdown(f"""
-        <div class="solvi-metrics">
-            <div class="solvi-metric">
-                <div class="solvi-metric-value">{total_diferencas}</div>
-                <div class="solvi-metric-label">Total de Alterações</div>
-            </div>
-            <div class="solvi-metric">
-                <div class="solvi-metric-value">{adicionados}</div>
-                <div class="solvi-metric-label">Adicionados</div>
-            </div>
-            <div class="solvi-metric">
-                <div class="solvi-metric-value">{removidos}</div>
-                <div class="solvi-metric-label">Removidos</div>
-            </div>
-            <div class="solvi-metric">
-                <div class="solvi-metric-value">{modificados}</div>
-                <div class="solvi-metric-label">Modificados</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Tabela  de diferenças
-        if diferencas:
-            st.markdown("### 📋 Detalhes das Alterações ")
-            df = pd.DataFrame(diferencas)
-            st.dataframe(df, use_container_width=True)
-        else:
-            st.markdown("""
-            <div class="solvi-alert success">
-                ✅ <strong>Nenhuma diferença encontrada!</strong><br>
-                Os documentos são idênticos em conteúdo após análise  com IA.
+        # Tabela de alterações semânticas
+        if st.session_state.comparison_results['diferencas']:
+            st.markdown("### 📋 Análise Semântica Detalhada")
+            
+            alteracoes = st.session_state.comparison_results['diferencas']
+            
+            # Métricas semânticas
+            total_alteracoes = len(alteracoes)
+            adicionados = len([a for a in alteracoes if a['tipo'] == 'adicionado'])
+            removidos = len([a for a in alteracoes if a['tipo'] == 'removido'])
+            modificados = len([a for a in alteracoes if a['tipo'] == 'modificado'])
+            
+            st.markdown(f"""
+            <div class="solvi-metrics">
+                <div class="solvi-metric">
+                    <div class="solvi-metric-value">{total_alteracoes}</div>
+                    <div class="solvi-metric-label">Alterações Semânticas</div>
+                </div>
+                <div class="solvi-metric">
+                    <div class="solvi-metric-value">{adicionados}</div>
+                    <div class="solvi-metric-label">Sentenças Adicionadas</div>
+                </div>
+                <div class="solvi-metric">
+                    <div class="solvi-metric-value">{removidos}</div>
+                    <div class="solvi-metric-label">Sentenças Removidas</div>
+                </div>
+                <div class="solvi-metric">
+                    <div class="solvi-metric-value">{modificados}</div>
+                    <div class="solvi-metric-label">Sentenças Modificadas</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Tabela de alterações
+            df_alteracoes = []
+            for i, alteracao in enumerate(alteracoes, 1):
+                df_alteracoes.append({
+                    'ID': i,
+                    'Tipo': alteracao['tipo'].title(),
+                    'Texto Original': alteracao['texto_original'][:100] + '...' if len(alteracao['texto_original']) > 100 else alteracao['texto_original'],
+                    'Texto Novo': alteracao['texto_novo'][:100] + '...' if len(alteracao['texto_novo']) > 100 else alteracao['texto_novo'],
+                    'Similaridade': f"{alteracao.get('similaridade', 0):.2%}" if alteracao.get('similaridade') else 'N/A'
+                })
+            
+            df = pd.DataFrame(df_alteracoes)
+            st.dataframe(df, use_container_width=True)
 
 def render_footer():
-    """Renderiza o footer  da aplicação"""
+    """Renderiza o footer premium da aplicação"""
     st.markdown("""
     <div class="solvi-footer">
         <div class="solvi-footer-content">
             <img src="https://static.wixstatic.com/media/b5b170_1e07cf7f7f82492a9808f9ae7f038596~mv2.png/v1/crop/x_0,y_0,w_2742,h_1106/fill/w_92,h_37,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/Logotipo%20Solv%C3%AD_edited_edited.png" alt="Solví Logo" class="solvi-footer-logo">
             <p style="margin: 3rem 0 1.5rem 0; font-size: 1.6rem; font-weight: 800; font-family: 'Poppins', sans-serif;">
-                🌱 Plataforma Solví - Soluções Inteligentes  para Análise de Documentos
+                🌱 Plataforma Solví - Soluções Inteligentes Premium para Análise de Documentos
             </p>
             <p style="margin: 0; opacity: 0.95; font-size: 1.2rem; font-weight: 600; font-family: 'Inter', sans-serif;">
-                Desenvolvido com ❤️ para sustentabilidade e inovação • Soluções para a vida • Tecnologia 
+                Desenvolvido com ❤️ para sustentabilidade e inovação • Soluções para a vida • Tecnologia Premium
             </p>
         </div>
     </div>
@@ -1824,29 +2423,29 @@ def render_footer():
 
 def main():
     """Função principal masterpiece da aplicação"""
-    # Inicializar session state 
+    # Inicializar session state premium
     init_session_state()
     
     # Renderizar header masterpiece
     render_header()
     
-    # Renderizar seção inspiracional 
+    # Renderizar seção inspiracional premium
     render_inspiration_section()
     
-    # Renderizar navegação 
+    # Renderizar navegação premium
     render_navigation()
     
-    # Renderizar conteúdo  baseado na aba selecionada
+    # Renderizar conteúdo premium baseado na aba selecionada
     if st.session_state.current_tab == 'cvm':
         render_cvm_analysis()
     elif st.session_state.current_tab == 'comparison':
         render_document_comparison()
     else:
-        # Fallback para CVM se algo der errado
-        st.session_state.current_tab = 'cvm'
-        render_cvm_analysis()
+        # Fallback para comparação para mostrar a nova funcionalidade
+        st.session_state.current_tab = 'comparison'
+        render_document_comparison()
     
-    # Renderizar footer 
+    # Renderizar footer premium
     render_footer()
 
 if __name__ == "__main__":
