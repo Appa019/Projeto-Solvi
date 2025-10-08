@@ -1117,7 +1117,7 @@ def render_inspiration_section():
             </div>
         </div>
         <div class="solvi-inspiration-item">
-            <img src="https://images.unsplash.com/photo-1569163139394-de4e4f43e4e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Inovação Verde" class="solvi-inspiration-image">
+            <<img src="https://static.wixstatic.com/media/b5b170_b587909825174509a2a6a71af0106cc3~mv2.png/v1/fill/w_245,h_357,al_c,q_85,enc_auto/Group%2041.png" alt="Inovação Verde" class="solvi-inspiration-image">
             <div class="solvi-inspiration-content">
                 <h3 class="solvi-inspiration-title">💡 Inovação Verde</h3>
                 <p class="solvi-inspiration-desc">Desenvolvimento de tecnologias limpas e processos inovadores para sustentabilidade empresarial.</p>
