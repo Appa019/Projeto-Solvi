@@ -1,7 +1,7 @@
 """
 🌱 Plataforma Solví - Análise Inteligente de Documentos
 Aplicação unificada que combina análise CVM e comparação de documentos
-com o estilo visual da plataforma Solví
+com design fiel ao site oficial da Solví
 """
 
 import streamlit as st
@@ -37,27 +37,32 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado baseado no design da Solví
+# CSS customizado baseado no design oficial da Solví
 st.markdown("""
 <style>
-    /* Importar fonte Google */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    /* Importar fontes Google */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
     /* Reset e configurações globais */
     .main .block-container {
-        padding-top: 2rem;
+        padding-top: 1rem;
         padding-bottom: 2rem;
-        max-width: 1200px;
+        max-width: 1400px;
     }
     
-    /* Header principal com estilo Solví */
+    /* Ocultar elementos padrão do Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Header principal com logo da Solví */
     .solvi-header {
         background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #4caf50 100%);
         color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(27, 94, 32, 0.3);
+        padding: 1.5rem 2rem;
+        border-radius: 0;
+        margin: -1rem -1rem 2rem -1rem;
+        box-shadow: 0 4px 20px rgba(27, 94, 32, 0.3);
         position: relative;
         overflow: hidden;
     }
@@ -69,8 +74,11 @@ st.markdown("""
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.3;
+        background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.1;
+        z-index: 0;
     }
     
     .solvi-header-content {
@@ -79,140 +87,208 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .solvi-logo-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
     
     .solvi-logo {
-        font-size: 2.5rem;
+        height: 50px;
+        width: auto;
+        filter: brightness(0) invert(1);
+    }
+    
+    .solvi-title {
+        font-size: 2.2rem;
         font-weight: 700;
         font-family: 'Inter', sans-serif;
         margin: 0;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        letter-spacing: -0.5px;
     }
     
     .solvi-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
         opacity: 0.9;
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
         font-weight: 400;
+        letter-spacing: 0.5px;
     }
     
     .solvi-badge {
-        background: rgba(255,255,255,0.2);
-        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.15);
+        padding: 0.75rem 1.5rem;
         border-radius: 25px;
         font-size: 0.9rem;
-        font-weight: 500;
+        font-weight: 600;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.2);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
     /* Navegação por abas estilo Solví */
-    .solvi-tabs {
+    .solvi-navigation {
         background: white;
         border-radius: 12px;
         padding: 0.5rem;
         margin: 1.5rem 0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         border: 1px solid #e8f5e8;
     }
     
-    .solvi-tab {
-        display: inline-block;
+    .solvi-nav-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
         padding: 1rem 2rem;
         margin: 0.25rem;
         border-radius: 8px;
         background: transparent;
         color: #2e7d32;
-        font-weight: 500;
+        font-weight: 600;
         text-decoration: none;
         transition: all 0.3s ease;
         border: 2px solid transparent;
         cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        justify-content: center;
     }
     
-    .solvi-tab:hover {
+    .solvi-nav-button:hover {
         background: #e8f5e8;
         transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
     }
     
-    .solvi-tab.active {
+    .solvi-nav-button.active {
         background: linear-gradient(135deg, #2e7d32, #4caf50);
         color: white;
         box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
     }
     
+    .solvi-nav-icon {
+        width: 24px;
+        height: 24px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    
     /* Cards estilo Solví */
     .solvi-card {
         background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border-radius: 16px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
         border: 1px solid #e8f5e8;
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .solvi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2e7d32, #4caf50, #8bc34a);
     }
     
     .solvi-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
     }
     
     .solvi-card-header {
         display: flex;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         padding-bottom: 1rem;
         border-bottom: 2px solid #e8f5e8;
     }
     
     .solvi-card-icon {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
         background: linear-gradient(135deg, #4caf50, #8bc34a);
-        border-radius: 10px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-right: 1rem;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
     }
     
     .solvi-card-title {
-        font-size: 1.3rem;
-        font-weight: 600;
+        font-size: 1.5rem;
+        font-weight: 700;
         color: #1b5e20;
         margin: 0;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -0.5px;
     }
     
     /* Métricas estilo Solví */
+    .solvi-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
     .solvi-metric {
         background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
-        border-radius: 12px;
-        padding: 1.5rem;
+        border-radius: 16px;
+        padding: 2rem;
         text-align: center;
         border: 1px solid #e8f5e8;
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .solvi-metric::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2e7d32, #4caf50);
     }
     
     .solvi-metric:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px);
         box-shadow: 0 8px 25px rgba(46, 125, 50, 0.15);
     }
     
     .solvi-metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: 3rem;
+        font-weight: 800;
         color: #2e7d32;
         margin-bottom: 0.5rem;
         font-family: 'Inter', sans-serif;
+        line-height: 1;
     }
     
     .solvi-metric-label {
         color: #666;
         font-size: 0.9rem;
-        font-weight: 500;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
     
     /* Botões estilo Solví */
@@ -220,12 +296,15 @@ st.markdown("""
         background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        padding: 1rem 2.5rem;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
     
     .stButton > button:hover {
@@ -236,33 +315,46 @@ st.markdown("""
     
     /* Alertas estilo Solví */
     .solvi-alert {
-        border-radius: 10px;
-        padding: 1rem 1.5rem;
-        margin: 1rem 0;
-        border-left: 4px solid;
+        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        margin: 1.5rem 0;
+        border-left: 5px solid;
         font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .solvi-alert::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 4px;
+        background: inherit;
     }
     
     .solvi-alert.success {
-        background: #e8f5e8;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
         border-color: #4caf50;
         color: #1b5e20;
     }
     
     .solvi-alert.warning {
-        background: #fff3cd;
+        background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
         border-color: #ff9800;
         color: #e65100;
     }
     
     .solvi-alert.error {
-        background: #ffebee;
+        background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
         border-color: #f44336;
         color: #c62828;
     }
     
     .solvi-alert.info {
-        background: #e3f2fd;
+        background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
         border-color: #2196f3;
         color: #0d47a1;
     }
@@ -272,43 +364,106 @@ st.markdown("""
         background: linear-gradient(180deg, #f8f9fa 0%, #e8f5e8 100%);
     }
     
+    .css-1d391kg .css-1v0mbdj {
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
     /* Upload areas */
     .solvi-upload {
-        border: 2px dashed #4caf50;
-        border-radius: 12px;
-        padding: 2rem;
+        border: 3px dashed #4caf50;
+        border-radius: 16px;
+        padding: 3rem 2rem;
         text-align: center;
-        background: #f8f9fa;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
         transition: all 0.3s ease;
+        margin: 1rem 0;
     }
     
     .solvi-upload:hover {
         border-color: #2e7d32;
-        background: #e8f5e8;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+        transform: translateY(-2px);
+    }
+    
+    .solvi-upload-icon {
+        font-size: 3rem;
+        color: #4caf50;
+        margin-bottom: 1rem;
+    }
+    
+    .solvi-upload-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+    }
+    
+    .solvi-upload-subtext {
+        font-size: 0.9rem;
+        color: #666;
     }
     
     /* Progress bars */
     .stProgress > div > div > div > div {
         background: linear-gradient(90deg, #4caf50, #8bc34a);
+        border-radius: 10px;
     }
     
     /* Expanders */
     .streamlit-expanderHeader {
-        background: #e8f5e8;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+        border-radius: 12px;
         font-weight: 600;
         color: #1b5e20;
+        border: 1px solid #c8e6c9;
+    }
+    
+    .streamlit-expanderContent {
+        border-radius: 0 0 12px 12px;
+        border: 1px solid #c8e6c9;
+        border-top: none;
     }
     
     /* Selectbox e inputs */
     .stSelectbox > div > div {
-        border-radius: 8px;
+        border-radius: 12px;
         border-color: #4caf50;
     }
     
     .stTextInput > div > div > input {
-        border-radius: 8px;
+        border-radius: 12px;
         border-color: #4caf50;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .stTextArea > div > div > textarea {
+        border-radius: 12px;
+        border-color: #4caf50;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Dataframes */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    /* Footer */
+    .solvi-footer {
+        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        margin: 3rem 0 1rem 0;
+        text-align: center;
+    }
+    
+    .solvi-footer-logo {
+        height: 40px;
+        margin-bottom: 1rem;
+        filter: brightness(0) invert(1);
     }
     
     /* Responsividade */
@@ -319,14 +474,57 @@ st.markdown("""
             gap: 1rem;
         }
         
-        .solvi-logo {
-            font-size: 2rem;
+        .solvi-title {
+            font-size: 1.8rem;
         }
         
         .main .block-container {
             padding-left: 1rem;
             padding-right: 1rem;
         }
+        
+        .solvi-metrics {
+            grid-template-columns: 1fr;
+        }
+        
+        .solvi-metric-value {
+            font-size: 2.5rem;
+        }
+    }
+    
+    /* Animações */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .solvi-card, .solvi-metric {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #4caf50, #8bc34a);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #2e7d32, #4caf50);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -723,9 +921,12 @@ def render_header():
     st.markdown("""
     <div class="solvi-header">
         <div class="solvi-header-content">
-            <div>
-                <h1 class="solvi-logo">🌱 Plataforma Solví</h1>
-                <p class="solvi-subtitle">Análise Inteligente de Documentos com IA</p>
+            <div class="solvi-logo-section">
+                <img src="https://www.solvi.com/images/logo-solvi-white.png" alt="Solví Logo" class="solvi-logo">
+                <div>
+                    <h1 class="solvi-title">Plataforma Solví</h1>
+                    <p class="solvi-subtitle">Análise Inteligente de Documentos com IA</p>
+                </div>
             </div>
             <div class="solvi-badge">
                 Soluções para a vida
@@ -736,9 +937,7 @@ def render_header():
 
 def render_navigation():
     """Renderiza a navegação por abas"""
-    st.markdown("""
-    <div class="solvi-tabs">
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="solvi-navigation">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -760,6 +959,10 @@ def render_cvm_analysis():
             <div class="solvi-card-icon">📊</div>
             <h2 class="solvi-card-title">Análise FRE vs Normas CVM</h2>
         </div>
+        <p style="color: #666; font-size: 1.1rem; line-height: 1.6;">
+            Análise automatizada de Formulários de Referência contra normas CVM com identificação 
+            de não conformidades e geração de relatórios detalhados.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -777,7 +980,8 @@ def render_cvm_analysis():
         if not api_key:
             st.markdown("""
             <div class="solvi-alert error">
-                ⚠️ Chave API OpenAI é obrigatória para análise!
+                ⚠️ <strong>Chave API OpenAI é obrigatória!</strong><br>
+                Configure sua chave para utilizar a análise CVM.
             </div>
             """, unsafe_allow_html=True)
             return
@@ -810,12 +1014,15 @@ def render_cvm_analysis():
     # Área principal
     if not fre_file:
         st.markdown("""
-        <div class="solvi-alert info">
-            <h3>🚀 Como usar a Análise CVM</h3>
-            <p>1. <strong>Configure sua API Key OpenAI</strong> na barra lateral</p>
-            <p>2. <strong>Faça upload do FRE</strong> (Formulário de Referência)</p>
-            <p>3. <strong>Adicione documentos CVM</strong> para comparação</p>
-            <p>4. <strong>Execute a análise</strong> e receba relatório detalhado</p>
+        <div class="solvi-upload">
+            <div class="solvi-upload-icon">📄</div>
+            <div class="solvi-upload-text">Como usar a Análise CVM</div>
+            <div class="solvi-upload-subtext">
+                1. Configure sua API Key OpenAI na barra lateral<br>
+                2. Faça upload do FRE (Formulário de Referência)<br>
+                3. Adicione documentos CVM para comparação<br>
+                4. Execute a análise e receba relatório detalhado
+            </div>
         </div>
         """, unsafe_allow_html=True)
         return
@@ -823,10 +1030,30 @@ def render_cvm_analysis():
     if not cvm_files:
         st.markdown("""
         <div class="solvi-alert warning">
-            ⚠️ Adicione pelo menos um documento CVM para realizar a análise comparativa.
+            ⚠️ <strong>Documentos CVM necessários</strong><br>
+            Adicione pelo menos um documento CVM para realizar a análise comparativa.
         </div>
         """, unsafe_allow_html=True)
         return
+    
+    # Informações dos arquivos carregados
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="solvi-alert success">
+            ✅ <strong>FRE Carregado:</strong> {fre_file.name}<br>
+            📊 Tamanho: {fre_file.size / 1024 / 1024:.2f} MB
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="solvi-alert info">
+            📚 <strong>Documentos CVM:</strong> {len(cvm_files)} arquivo(s)<br>
+            📊 Total: {sum(f.size for f in cvm_files) / 1024 / 1024:.2f} MB
+        </div>
+        """, unsafe_allow_html=True)
     
     # Botão de análise
     if st.button("🔍 Iniciar Análise CVM", type="primary", use_container_width=True):
@@ -879,12 +1106,19 @@ def render_cvm_analysis():
                     time.sleep(0.5)
                 
                 status_text.text("✅ Análise concluída!")
+                progress_bar.empty()
+                status_text.empty()
                 
                 # Salvar resultados
                 st.session_state.analysis_results = analysis_results
                 st.session_state.fre_filename = fre_file.name
                 
-                st.success("✅ Análise CVM concluída com sucesso!")
+                st.markdown("""
+                <div class="solvi-alert success">
+                    ✅ <strong>Análise CVM concluída com sucesso!</strong><br>
+                    Confira os resultados detalhados abaixo.
+                </div>
+                """, unsafe_allow_html=True)
                 
             except Exception as e:
                 st.error(f"❌ Erro durante a análise: {str(e)}")
@@ -896,44 +1130,31 @@ def render_cvm_analysis():
         st.markdown("### 📊 Resultados da Análise")
         
         # Métricas gerais
-        col1, col2, col3, col4 = st.columns(4)
-        
         total_pontos = sum(len(r.get('pontos_atencao', [])) for r in analysis_results)
         criticos = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'CRITICO')
         atencao = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'ATENCAO')
         sugestoes = sum(1 for r in analysis_results for p in r.get('pontos_atencao', []) if p.get('criticidade') == 'SUGESTAO')
         
-        with col1:
-            st.markdown(f"""
+        st.markdown(f"""
+        <div class="solvi-metrics">
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{total_pontos}</div>
                 <div class="solvi-metric-label">Total de Pontos</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{criticos}</div>
                 <div class="solvi-metric-label">Críticos</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{atencao}</div>
                 <div class="solvi-metric-label">Atenção</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col4:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{sugestoes}</div>
                 <div class="solvi-metric-label">Sugestões</div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
         
         # Exibir resultados detalhados
         for result in analysis_results:
@@ -968,6 +1189,10 @@ def render_document_comparison():
             <div class="solvi-card-icon">📚</div>
             <h2 class="solvi-card-title">Comparação Inteligente de Documentos</h2>
         </div>
+        <p style="color: #666; font-size: 1.1rem; line-height: 1.6;">
+            Compare dois documentos (PDF ou Word) e identifique apenas as alterações reais de conteúdo, 
+            ignorando mudanças de formatação e posicionamento.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -986,8 +1211,9 @@ def render_document_comparison():
         if arquivo_ref:
             st.markdown(f"""
             <div class="solvi-alert success">
-                ✅ Arquivo carregado: {arquivo_ref.name}<br>
-                📊 Tamanho: {arquivo_ref.size / 1024 / 1024:.2f} MB
+                ✅ <strong>Arquivo carregado:</strong> {arquivo_ref.name}<br>
+                📊 <strong>Tamanho:</strong> {arquivo_ref.size / 1024 / 1024:.2f} MB<br>
+                📋 <strong>Tipo:</strong> {arquivo_ref.type.split('/')[-1].upper()}
             </div>
             """, unsafe_allow_html=True)
     
@@ -1003,29 +1229,55 @@ def render_document_comparison():
         if arquivo_novo:
             st.markdown(f"""
             <div class="solvi-alert success">
-                ✅ Arquivo carregado: {arquivo_novo.name}<br>
-                📊 Tamanho: {arquivo_novo.size / 1024 / 1024:.2f} MB
+                ✅ <strong>Arquivo carregado:</strong> {arquivo_novo.name}<br>
+                📊 <strong>Tamanho:</strong> {arquivo_novo.size / 1024 / 1024:.2f} MB<br>
+                📋 <strong>Tipo:</strong> {arquivo_novo.type.split('/')[-1].upper()}
             </div>
             """, unsafe_allow_html=True)
     
+    # Informações sobre o algoritmo
+    if not arquivo_ref or not arquivo_novo:
+        st.markdown("""
+        <div class="solvi-upload">
+            <div class="solvi-upload-icon">📚</div>
+            <div class="solvi-upload-text">Algoritmo Inteligente de Comparação</div>
+            <div class="solvi-upload-subtext">
+                ✅ Ignora mudanças de posicionamento e formatação<br>
+                ✅ Foca apenas em alterações reais de conteúdo<br>
+                ✅ Detecta modificações com alta precisão<br>
+                ✅ Normaliza texto para comparação precisa
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Botão de comparação
     if arquivo_ref and arquivo_novo:
+        # Verificar compatibilidade de tipos
+        comparator = DocumentComparator()
+        tipo_ref = comparator.detectar_tipo_arquivo(arquivo_ref.name)
+        tipo_novo = comparator.detectar_tipo_arquivo(arquivo_novo.name)
+        
+        if tipo_ref != tipo_novo:
+            st.markdown(f"""
+            <div class="solvi-alert warning">
+                ⚠️ <strong>Tipos diferentes detectados:</strong> {tipo_ref.upper()} vs {tipo_novo.upper()}<br>
+                A comparação ainda é possível, mas pode não ser ideal.
+            </div>
+            """, unsafe_allow_html=True)
+        
         if st.button("🔍 Comparar Documentos", type="primary", use_container_width=True):
             with st.spinner("🔄 Processando comparação..."):
                 try:
-                    # Inicializar comparador
-                    comparator = DocumentComparator()
-                    
                     # Extrair textos
                     ref_bytes = arquivo_ref.read()
                     novo_bytes = arquivo_novo.read()
                     
-                    if comparator.detectar_tipo_arquivo(arquivo_ref.name) == 'pdf':
+                    if tipo_ref == 'pdf':
                         texto_ref = comparator.extrair_texto_pdf(ref_bytes)
                     else:
                         texto_ref = comparator.extrair_texto_word(ref_bytes)
                     
-                    if comparator.detectar_tipo_arquivo(arquivo_novo.name) == 'pdf':
+                    if tipo_novo == 'pdf':
                         texto_novo = comparator.extrair_texto_pdf(novo_bytes)
                     else:
                         texto_novo = comparator.extrair_texto_word(novo_bytes)
@@ -1036,12 +1288,14 @@ def render_document_comparison():
                     
                     # Comparar textos
                     diferencas_simples = []
-                    diferencas_detalhadas = []
                     
                     max_paginas = max(len(texto_ref), len(texto_novo))
                     progress_bar = st.progress(0)
+                    status_text = st.empty()
                     
                     for i in range(max_paginas):
+                        status_text.text(f"Analisando página/seção {i+1} de {max_paginas}")
+                        
                         ref = texto_ref[i] if i < len(texto_ref) else ""
                         novo = texto_novo[i] if i < len(texto_novo) else ""
                         
@@ -1069,6 +1323,7 @@ def render_document_comparison():
                         progress_bar.progress((i + 1) / max_paginas)
                     
                     progress_bar.empty()
+                    status_text.empty()
                     
                     # Salvar resultados
                     st.session_state.comparison_results = {
@@ -1077,7 +1332,12 @@ def render_document_comparison():
                         'arquivo_novo': arquivo_novo.name
                     }
                     
-                    st.success("✅ Comparação concluída com sucesso!")
+                    st.markdown("""
+                    <div class="solvi-alert success">
+                        ✅ <strong>Comparação concluída com sucesso!</strong><br>
+                        Confira os resultados detalhados abaixo.
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                 except Exception as e:
                     st.error(f"❌ Erro durante a comparação: {str(e)}")
@@ -1090,44 +1350,31 @@ def render_document_comparison():
         st.markdown("### 📊 Resultados da Comparação")
         
         # Métricas
-        col1, col2, col3, col4 = st.columns(4)
-        
         total_diferencas = len(diferencas)
         adicionados = len([d for d in diferencas if d['tipo'] == 'Adicionado'])
         removidos = len([d for d in diferencas if d['tipo'] == 'Removido'])
         modificados = len([d for d in diferencas if d['tipo'] == 'Modificado'])
         
-        with col1:
-            st.markdown(f"""
+        st.markdown(f"""
+        <div class="solvi-metrics">
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{total_diferencas}</div>
                 <div class="solvi-metric-label">Total de Alterações</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{adicionados}</div>
                 <div class="solvi-metric-label">Adicionados</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{removidos}</div>
                 <div class="solvi-metric-label">Removidos</div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        with col4:
-            st.markdown(f"""
             <div class="solvi-metric">
                 <div class="solvi-metric-value">{modificados}</div>
                 <div class="solvi-metric-label">Modificados</div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
         
         # Tabela de diferenças
         if diferencas:
@@ -1137,9 +1384,24 @@ def render_document_comparison():
         else:
             st.markdown("""
             <div class="solvi-alert success">
-                ✅ Nenhuma diferença de conteúdo encontrada entre os documentos!
+                ✅ <strong>Nenhuma diferença encontrada!</strong><br>
+                Os documentos são idênticos em conteúdo.
             </div>
             """, unsafe_allow_html=True)
+
+def render_footer():
+    """Renderiza o footer da aplicação"""
+    st.markdown("""
+    <div class="solvi-footer">
+        <img src="https://www.solvi.com/images/logo-solvi-white.png" alt="Solví Logo" class="solvi-footer-logo">
+        <p style="margin: 1rem 0 0.5rem 0; font-size: 1.1rem; font-weight: 600;">
+            🌱 Plataforma Solví - Soluções Inteligentes para Análise de Documentos
+        </p>
+        <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">
+            Desenvolvido com ❤️ para sustentabilidade e inovação
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def main():
     """Função principal da aplicação"""
@@ -1158,14 +1420,8 @@ def main():
     else:
         render_document_comparison()
     
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #666; padding: 2rem;">
-        <p>🌱 <strong>Plataforma Solví</strong> - Soluções Inteligentes para Análise de Documentos</p>
-        <p>Desenvolvido com ❤️ para sustentabilidade e inovação</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Renderizar footer
+    render_footer()
 
 if __name__ == "__main__":
     main()
